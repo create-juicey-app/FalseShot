@@ -1,0 +1,12 @@
+{
+  "error": "TypeError: node is null",
+  "stackTrace": "\nTransition@webpack-internal:///./node_modules/react-transition-group/esm/Transition.js:133:30\nGrow@webpack-internal:///./node_modules/@mui/material/Grow/Grow.js:50:104\nStartMenu@webpack-internal:///./src/components/StartMenu.js:39:73\ndiv\nwithEmotionCache/<@webpack-internal:///./node_modules/@emotion/react/dist/emotion-element-7a1343fa.browser.development.esm.js:70:66\nBox@webpack-internal:///./node_modules/@mui/system/esm/createBox/createBox.js:32:81\nDefaultPropsProvider@webpack-internal:///./node_modules/@mui/system/esm/DefaultPropsProvider/DefaultPropsProvider.js:19:30\nRtlProvider@webpack-internal:///./node_modules/@mui/system/esm/RtlProvider/index.js:15:21\nThemeProvider@webpack-internal:///./node_modules/@mui/private-theming/ThemeProvider/ThemeProvider.js:46:7\nThemeProvider@webpack-internal:///./node_modules/@mui/system/esm/ThemeProvider/ThemeProvider.js:64:7\nThemeProviderNoVars@webpack-internal:///./node_modules/@mui/material/styles/ThemeProviderNoVars.js:16:43\nThemeProvider@webpack-internal:///./node_modules/@mui/material/styles/ThemeProvider.js:18:31\nDesktop@webpack-internal:///./src/components/Desktop.js:28:98\nHome\nErrorBoundary@webpack-internal:///./src/pages/_app.js:51:9\nMyApp@webpack-internal:///./src/pages/_app.js:59:1\nPathnameContextProviderAdapter@webpack-internal:///./node_modules/next/dist/shared/lib/router/adapters.js:81:42\nErrorBoundary@webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/ErrorBoundary.js:41:9\nReactDevOverlay@webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/ReactDevOverlay.js:33:55\nContainer@webpack-internal:///./node_modules/next/dist/client/index.js:81:1\nAppContainer@webpack-internal:///./node_modules/next/dist/client/index.js:189:24\nRoot@webpack-internal:///./node_modules/next/dist/client/index.js:413:35",
+  "hexDump": [
+    "26 bc a1 08 6f 8a c8 48 58 3f 5a 31 68 60 77 4d",
+    "50 da ed c1 d2 af 04 6c 4e df 16 b3 3b ae b2 17",
+    "ae 2b 58 c5 7a d3 ef 81 32 44 6d 95 1e fc 1a e9",
+    "7f 3e ca 71 68 ac 75 55 e1 c4 7c a0 3d 26 b3 96",
+    "22 98 a9 17 68 ea 3c c3 fc 3f 7b ae fd 35 22 2c"
+  ],
+  "timestamp": "2024-10-17T10:42:49.875Z"
+}

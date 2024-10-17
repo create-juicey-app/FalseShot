@@ -1,0 +1,90 @@
+.App {
+  width: 100vw;
+  height: 100vh;
+  background-color: #1a0033;
+  color: #fff;
+  font-family: "Pixel", sans-serif;
+  overflow: hidden;
+}
+
+.desktop {
+  width: 100%;
+  height: calc(100% - 30px);
+  position: relative;
+}
+
+.desktop-icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.window {
+  position: absolute;
+  width: 300px;
+  height: 200px;
+  background-color: #2a0052;
+  border: 1px solid #8855ff;
+  box-shadow: 0 0 10px rgba(136, 85, 255, 0.5);
+}
+
+.window-header {
+  background-color: #8855ff;
+  padding: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.window-content {
+  padding: 8px;
+}
+
+.taskbar {
+  height: 30px;
+  background-color: #2a0052;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.start-button,
+.taskbar-item,
+.clock {
+  padding: 0 8px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.taskbar-item {
+  margin: 0 4px;
+  background-color: #3a0062;
+  cursor: pointer;
+}
+
+.taskbar-item.active {
+  background-color: #8855ff;
+}
+nextjs-portal {
+  display: none;
+}
+
+img { 
+  image-rendering: optimizeSpeed;             /* STOP SMOOTHING, GIVE ME SPEED  */
+  image-rendering: -moz-crisp-edges;          /* Firefox                        */
+  image-rendering: -o-crisp-edges;            /* Opera                          */
+  image-rendering: -webkit-optimize-contrast; /* Chrome (and eventually Safari) */
+  image-rendering: pixelated;                 /* Universal support since 2021   */
+  image-rendering: optimize-contrast;         /* CSS3 Proposed                  */
+  -ms-interpolation-mode: nearest-neighbor;   /* IE8+                           */
+
+}
