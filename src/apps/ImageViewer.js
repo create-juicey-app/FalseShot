@@ -1,8 +1,21 @@
-// apps/imageViewer.js
+// apps/ImageViewer.js
 import React from "react";
 import { Box, Typography, Button } from "@mui/material";
 
 const ImageViewer = ({ filePath }) => {
+  if (!filePath) {
+    return (
+      <Box
+        sx={{
+          padding: 2,
+          textAlign: "center",
+        }}
+      >
+        <Typography variant="h6">No Image Selected</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -10,6 +23,8 @@ const ImageViewer = ({ filePath }) => {
         textAlign: "center",
         bgcolor: "background.paper",
         p: 2,
+        height: "100%",
+        overflow: "auto",
       }}
     >
       <Typography variant="h6" gutterBottom>
@@ -29,9 +44,7 @@ const ImageViewer = ({ filePath }) => {
         <Button
           variant="contained"
           color="primary"
-          href={`/api/filesystem/download?filePath=${encodeURIComponent(
-            filePath
-          )}`}
+          href={`/api/filesystem/download?filePath=${encodeURIComponent(filePath)}`}
           target="_blank"
         >
           Download

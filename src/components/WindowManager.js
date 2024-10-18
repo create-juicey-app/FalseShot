@@ -10,10 +10,10 @@ import React, {
 import { CircularProgress, Button } from "@mui/material";
 import Window from "./Window";
 import Modal from "./Modal";
-import ErrorBoundary from "./ErrorBoundary"; // Ensure you have this component
-import path from "path";
+import ErrorBoundary from "./ErrorBoundary"; // Ensure this component exists
 
-const WindowManager = forwardRef(({ apps }, ref) => {
+const WindowManager = forwardRef((props, ref) => {
+  const { apps } = props; // Extract apps from props
   const [windows, setWindows] = useState([]);
   const [activeWindow, setActiveWindow] = useState(null);
   const [errorModal, setErrorModal] = useState({ isOpen: false, content: "" });
@@ -33,6 +33,7 @@ const WindowManager = forwardRef(({ apps }, ref) => {
     setErrorModal({ isOpen: false, content: "" });
   };
 
+  // Error boundary fallback component
   const ErrorFallback = ({ error, resetErrorBoundary }) => (
     <div>
       <h2>Something went wrong:</h2>
@@ -41,62 +42,70 @@ const WindowManager = forwardRef(({ apps }, ref) => {
     </div>
   );
 
-  const WindowContent = ({
-    component: Component,
-    componentProps,
-    windowId,
-  }) => {
-    return (
-      <Suspense fallback={<CircularProgress />}>
-        <ErrorBoundary
-          FallbackComponent={ErrorFallback}
-          onError={(error) => handleError(error, windowId)}
-          onReset={() => {
-            // Add any reset logic here if needed
-          }}
-        >
-          <Component {...componentProps} />
-        </ErrorBoundary>
-      </Suspense>
-    );
-  };
-
+  // Expose methods to parent components via ref
   useImperativeHandle(ref, () => ({
     openWindow: (app) => {
+      // Check if a window with the same title already exists
       const existingWindow = windows.find(
         (window) => window.title === app.label
       );
       if (existingWindow) {
-        setWindows((prev) =>
-          prev.map((window) =>
-            window.id === existingWindow.id
-              ? { ...window, isMinimized: false }
-              : window
-          )
-        );
+        // If the window exists and is minimized, restore it
+        if (existingWindow.isMinimized) {
+          setWindows((prev) =>
+            prev.map((window) =>
+              window.id === existingWindow.id
+                ? { ...window, isMinimized: false }
+                : window
+            )
+          );
+        }
         setActiveWindow(existingWindow.id);
-      } else {
-        const newWindow = {
-          id: Date.now(),
+        return;
+      }
+
+      // Create a unique window ID
+      const windowId = Date.now();
+
+      let Component = null;
+
+      if (app.component) {
+        // If a component is directly provided, use it
+        Component = app.component;
+      } else if (app.filename) {
+        // Dynamically import based on filename
+        Component = lazy(() =>
+          import(`../apps/${app.filename}`)
+            .then((module) => ({ default: module.default }))
+            .catch((error) => {
+              handleError(error, windowId);
+              return { default: () => <div>Failed to load component</div> };
+            })
+        );
+      }
+
+      if (!Component) {
+        handleError(new Error("Component is undefined"), windowId);
+        return;
+      }
+
+      // Add the new window to the state
+      setWindows((prev) => [
+        ...prev,
+        {
+          id: windowId,
           title: app.label,
-          component: lazy(() =>
-            import(`../apps/${app.filename}`)
-              .then((module) => ({ default: module.default }))
-              .catch((error) => {
-                handleError(error, newWindow.id);
-                return { default: () => <div>Failed to load component</div> };
-              })
-          ),
+          component: Component,
           componentProps: app.componentProps,
-          position: { x: Math.random() * 100, y: Math.random() * 100 },
+          icon: app.icon,
+          position: { x: 100, y: 100 }, // Default position
           isMaximized: false,
           isMinimized: false,
-          icon: app.icon,
           ...app.windowProps,
-        };
-        setWindows((prev) => [...prev, newWindow]);
-        setActiveWindow(newWindow.id);
-      }
+        },
+      ]);
+
+      setActiveWindow(windowId);
     },
     closeWindow: (id) => {
       setWindows((prev) => prev.filter((window) => window.id !== id));
@@ -110,7 +119,9 @@ const WindowManager = forwardRef(({ apps }, ref) => {
           window.id === id ? { ...window, isMinimized: true } : window
         )
       );
-      setActiveWindow(null);
+      if (activeWindow === id) {
+        setActiveWindow(null);
+      }
     },
     maximizeWindow: (id) => {
       setWindows((prev) =>
@@ -125,23 +136,30 @@ const WindowManager = forwardRef(({ apps }, ref) => {
       setWindows((prev) =>
         prev.map((window) => ({ ...window, isMinimized: true }))
       );
+      setActiveWindow(null);
     },
     getWindows: () => windows,
     getActiveWindow: () => activeWindow,
     setActiveWindow: (id) => setActiveWindow(id),
   }));
 
-  // Automatically open the Documents window when the component mounts
-  useEffect(() => {
-    // Find the Documents app from the apps prop
-    const documentsApp = apps.find((app) => app.label === "Documents");
-
-    if (documentsApp) {
-      ref.current.openWindow(documentsApp);
-    } else {
-      console.warn("Documents app not found in the apps prop.");
-    }
-  }, [apps, ref]);
+  // Component wrapper with Suspense and ErrorBoundary
+  const WindowContent = ({ Component, componentProps, windowId }) => {
+    return (
+      <Suspense fallback={<CircularProgress />}>
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          onError={(error) => handleError(error, windowId)}
+          onReset={() => {
+            // Handle reset if needed
+          }}
+        >
+          {/* Pass windowManagerRef to the component */}
+          <Component {...componentProps} windowManagerRef={ref} />
+        </ErrorBoundary>
+      </Suspense>
+    );
+  };
 
   return (
     <>
@@ -149,14 +167,14 @@ const WindowManager = forwardRef(({ apps }, ref) => {
         <Window
           key={window.id}
           {...window}
-          onClose={() => ref.current.closeWindow(window.id)}
-          onMinimize={() => ref.current.minimizeWindow(window.id)}
-          onMaximize={() => ref.current.maximizeWindow(window.id)}
+          onClose={() => ref.current?.closeWindow(window.id)}
+          onMinimize={() => ref.current?.minimizeWindow(window.id)}
+          onMaximize={() => ref.current?.maximizeWindow(window.id)}
           setActiveWindow={() => setActiveWindow(window.id)}
           isActive={activeWindow === window.id}
         >
           <WindowContent
-            component={window.component}
+            Component={window.component}
             componentProps={window.componentProps}
             windowId={window.id}
           />

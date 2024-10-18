@@ -2,7 +2,7 @@
 const path = require("path");
 const fs = require("fs");
 
-const BASE_DIR = path.resolve("filesystem"); // Change this to your desired base directory
+const BASE_DIR = path.resolve("filesystem"); // Define your base directory here
 
 // Ensure the user cannot access files outside the BASE_DIR
 function getSafePath(relativePath) {
@@ -15,7 +15,7 @@ function getSafePath(relativePath) {
 
 // Validate file and folder names
 function isValidName(name) {
-  // Simple regex to check for invalid characters, adjust as needed
+  // Adjust the regex as needed for your requirements
   return /^[^<>:"/\\|?*\x00-\x1F]+$/.test(name);
 }
 

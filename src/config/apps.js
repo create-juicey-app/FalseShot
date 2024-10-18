@@ -47,7 +47,7 @@ export const apps = [
     id: "imgviewer",
     label: "Image Viewer",
     icon: "/customize.png",
-    filename: "ImageV",
+    filename: "ImageViewer",
     componentProps: {},
     windowProps: {
       width: 800,

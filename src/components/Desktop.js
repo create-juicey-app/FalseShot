@@ -1,3 +1,4 @@
+// components/Desktop.js
 import React, { useState, useRef } from "react";
 import {
   Box,
@@ -21,8 +22,10 @@ const Desktop = () => {
   const [primaryColor, setPrimaryColor] = useState("#8855ff");
 
   const customTheme = createCustomTheme(themeMode, primaryColor);
-  const windowManagerRef = useRef(null);
-
+  
+  // Initialize the ref
+  const windowManagerRef = useRef(null); 
+  console.log(windowManagerRef)
   const handleStartClick = (event) => {
     setAnchorEl(event.currentTarget);
     setIsStartMenuOpen(true);
@@ -65,13 +68,15 @@ const Desktop = () => {
           backgroundSize: "4px 4px",
         }}
       >
-        <DesktopIcons 
-          apps={apps} 
-          openWindow={(app) => windowManagerRef.current?.openWindow(app)} 
-        />
+        {/* Pass the ref to WindowManager */}
         <WindowManager
           ref={windowManagerRef}
           apps={apps}
+        />
+        {/* Pass the ref to DesktopIcons to enable opening windows */}
+        <DesktopIcons 
+          apps={apps} 
+          openWindow={(app) => windowManagerRef.current?.openWindow(app)} 
         />
         <Taskbar
           handleStartClick={handleStartClick}

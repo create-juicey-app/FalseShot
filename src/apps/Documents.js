@@ -1,4 +1,4 @@
-// components/WindowsFileManager.js
+// apps/Documents.js
 import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
@@ -34,9 +34,9 @@ import {
   Upload as UploadIcon,
 } from "@mui/icons-material";
 import axios from "axios";
-import path from "path"; // Ensure path is imported for file extension checks
+import path from "path";
 
-const WindowsFileManager = ({ initialPath = "Documents" }) => {
+const Documents = ({ initialPath = "Documents", windowManagerRef }) => {
   // State variables
   const [currentDir, setCurrentDir] = useState("/"); // Will set to initialPath on load
   const [items, setItems] = useState([]);
@@ -290,31 +290,31 @@ const WindowsFileManager = ({ initialPath = "Documents" }) => {
 
   // Handle actions from context menu
   const handleContextAction = (action) => {
-    switch (action) {
-      case "open":
-        if (contextItem.isDirectory) {
-          navigateTo(`${currentDir}/${contextItem.name}`);
+    console.log("action: " + action);
+    if (action === "open") {
+      if (contextItem.isDirectory) {
+        navigateTo(`${currentDir}/${contextItem.name}`);
+      } else {
+        console.log(windowManagerRef)
+        // Open image in a new window via WindowManager
+        if (windowManagerRef?.current?.openWindow) {
+          windowManagerRef.current.openWindow({
+            title: contextItem.name,
+            component: React.lazy(() => import("../apps/ImageViewer")),
+            componentProps: { filePath: `${currentDir}/${contextItem.name}` },
+            icon: "🖼️",
+          });
         } else {
-          // Navigate to the read page
-          window.location.href = `/files/read?filePath=${encodeURIComponent(
-            `${currentDir}/${contextItem.name}`
-          )}`;
+          showSnackbar("Window Manager is not available", "error");
         }
-        break;
-      case "delete":
-        setSelectedItems([contextItem.name]);
-        handleDelete();
-        break;
-      case "copy":
-        setSelectedItems([contextItem.name]);
-        setOpenCopyDialog(true);
-        break;
-      case "rename":
-        // Implement rename functionality
-        showSnackbar("Rename functionality not implemented yet.", "info");
-        break;
-      default:
-        break;
+      }
+    } else if (action === "copy") {
+      setOpenCopyDialog(true);
+    } else if (action === "delete") {
+      handleDelete();
+    } else if (action === "rename") {
+      // Implement rename functionality if needed
+      showSnackbar("Rename functionality not implemented yet.", "info");
     }
     handleCloseContextMenu();
   };
@@ -324,17 +324,25 @@ const WindowsFileManager = ({ initialPath = "Documents" }) => {
     setSnackbar({ open: true, message, severity });
   };
 
-  // Handle item double-click (navigate into directory or open file)
-  const handleItemDoubleClick = (item) => {
-    if (item.isDirectory) {
-      navigateTo(`${currentDir}/${item.name}`);
+  // Handle item double-click (navigate into directory or open image)
+  // apps/Documents.js
+const handleItemDoubleClick = (item) => {
+  if (item.isDirectory) {
+    navigateTo(`${currentDir}/${item.name}`);
+  } else {
+    // Open image in a new window via WindowManager using filename
+    if (windowManagerRef?.current?.openWindow) {
+      windowManagerRef.current.openWindow({
+        label: item.name, // Ensure consistency with `app.label`
+        filename: "ImageViewer", // Use the filename as defined in apps.js
+        componentProps: { filePath: `${currentDir}/${item.name}` },
+        icon: "🖼️",
+      });
     } else {
-      // Navigate to the read page without leading slash
-      window.location.href = `/files/read?filePath=${encodeURIComponent(
-        `${currentDir}/${item.name}`
-      )}`;
+      showSnackbar("Window Manager is not available", "error");
     }
-  };
+  }
+};
 
   // Handle keyboard shortcuts (e.g., Delete key)
   const handleKeyDown = (event) => {
@@ -539,15 +547,10 @@ const WindowsFileManager = ({ initialPath = "Documents" }) => {
                     variant="text"
                     onClick={() => fetchDirectory(path)}
                     disabled={isLast}
-                    onDragEnter={() => {}} // Optional drag indicators
-                    onDragLeave={() => {}}
                     onDragOver={(e) => handleDragOver(e)}
                     onDrop={(e) => handleDrop(e, path)}
                     sx={{
-                      backgroundColor:
-                        /* Optional visual feedback for drag-over */
-                        /* can be managed via state */
-                        "transparent",
+                      backgroundColor: "transparent",
                     }}
                   >
                     {displayName}
@@ -685,7 +688,7 @@ const WindowsFileManager = ({ initialPath = "Documents" }) => {
                     ) : isImageFile(item.name) ? (
                       <img
                         src={`/api/filesystem/thumbnail?filePath=${encodeURIComponent(
-                          `${currentDir}/${item.name}`
+                          `${currentDir}/${item.name}`.replace(/^\/+/, '')
                         )}&size=100`}
                         alt={item.name}
                         style={{
@@ -763,7 +766,7 @@ const WindowsFileManager = ({ initialPath = "Documents" }) => {
                     ) : isImageFile(item.name) ? (
                       <img
                         src={`/api/filesystem/thumbnail?filePath=${encodeURIComponent(
-                          `${currentDir}/${item.name}`
+                          `${currentDir}/${item.name}`.replace(/^\/+/, '')
                         )}&size=40`}
                         alt={item.name}
                         style={{
@@ -939,4 +942,4 @@ const WindowsFileManager = ({ initialPath = "Documents" }) => {
   );
 };
 
-export default WindowsFileManager;
+export default Documents ;
