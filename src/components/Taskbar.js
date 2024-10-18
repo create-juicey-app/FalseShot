@@ -92,8 +92,13 @@ const Taskbar = ({
   return (
     <AppBar
       position="fixed"
-      color="primary"
-      sx={{ top: "auto", bottom: 0, height: 44, borderRadius: 0 }}
+      sx={{
+        background: "#000000",
+        top: "auto",
+        bottom: 0,
+        height: 44,
+        borderRadius: 0,
+      }}
     >
       <Toolbar
         variant="dense"
@@ -110,7 +115,7 @@ const Taskbar = ({
           onClick={handleStartClick}
           size="small"
         >
-          <MenuIcon fontSize="large" />
+          <MenuIcon fontSize="medium" />
         </IconButton>
         <Box
           sx={{
@@ -173,7 +178,12 @@ const Taskbar = ({
             size="medium"
             sx={{ ml: 1 }}
           >
-            <Image src="/minimizer.png" alt="Minimize All" width={30} height={30} />
+            <Image
+              src="/minimizer.png"
+              alt="Minimize All"
+              width={30}
+              height={30}
+            />
           </IconButton>
         </Box>
       </Toolbar>

@@ -14,7 +14,7 @@ import {
   Minimize as MinimizeIcon,
   Maximize as MaximizeIcon,
 } from "@mui/icons-material";
-import { Rnd } from 'react-rnd';
+import { Rnd } from "react-rnd";
 import Image from "next/image";
 
 const Window = ({
@@ -128,7 +128,13 @@ const Window = ({
           backgroundColor: "background.paper",
           borderRadius: 0,
           transition: "all 0.3s ease-in-out",
-          transform: isSpawning ? 'scale(0.9)' : isClosing ? 'scale(0.9)' : isMinimizing ? 'scale(0.9) translateY(100%)' : 'scale(1)',
+          transform: isSpawning
+            ? "scale(0.9)"
+            : isClosing
+            ? "scale(0.9)"
+            : isMinimizing
+            ? "scale(0.9) translateY(100%)"
+            : "scale(1)",
           opacity: isSpawning ? 0 : isClosing ? 0 : 1,
         }}
       >
@@ -138,14 +144,20 @@ const Window = ({
           sx={{ cursor: isMaximized ? "default" : "move", borderRadius: 0 }}
         >
           <Toolbar
-          disableGutters={true}
+            disableGutters={true}
             variant="dense"
             className="window-handle"
-            sx={{ minHeight: 24, padding: '0 -8px' }}
+            sx={{ minHeight: 24, padding: "0 -8px" }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, paddingLeft:1 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                flexGrow: 1,
+                paddingLeft: 1,
+              }}
+            >
               {icon && (
-                
                 <Image
                   src={icon}
                   alt={title}
@@ -153,11 +165,15 @@ const Window = ({
                   height={32}
                   draggable={false}
                 />
-                
-                
               )}
-              {icon && <Divider orientation="vertical" flexItem sx={{marginLeft:1, marginRight:1}} />}
-              <Typography sx={{paddingLeft:1}} variant="body2">
+              {icon && (
+                <Divider
+                  orientation="vertical"
+                  flexItem
+                  sx={{ marginLeft: 1, marginRight: 1 }}
+                />
+              )}
+              <Typography sx={{ paddingLeft: 1 }} variant="body2">
                 {title}
               </Typography>
             </Box>

@@ -24,7 +24,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: pointer;
+  cursor: url("/cursors/C2.png"), pointer;
 }
 
 .window {
@@ -50,7 +50,7 @@
 
 .taskbar {
   height: 30px;
-  background-color: #2a0052;
+  background-color: #000000;
   display: flex;
   align-items: center;
   padding: 0 8px;
@@ -68,7 +68,7 @@
 .taskbar-item {
   margin: 0 4px;
   background-color: #3a0062;
-  cursor: pointer;
+  cursor: url("/cursors/C2.png"), pointer;
 }
 
 .taskbar-item.active {
@@ -78,13 +78,64 @@ nextjs-portal {
   display: none;
 }
 
-img { 
-  image-rendering: optimizeSpeed;             /* STOP SMOOTHING, GIVE ME SPEED  */
-  image-rendering: -moz-crisp-edges;          /* Firefox                        */
-  image-rendering: -o-crisp-edges;            /* Opera                          */
+img {
+  image-rendering: optimizeSpeed; /* STOP SMOOTHING, GIVE ME SPEED  */
+  image-rendering: -moz-crisp-edges; /* Firefox                        */
+  image-rendering: -o-crisp-edges; /* Opera                          */
   image-rendering: -webkit-optimize-contrast; /* Chrome (and eventually Safari) */
-  image-rendering: pixelated;                 /* Universal support since 2021   */
-  image-rendering: optimize-contrast;         /* CSS3 Proposed                  */
-  -ms-interpolation-mode: nearest-neighbor;   /* IE8+                           */
+  image-rendering: pixelated; /* Universal support since 2021   */
+  image-rendering: optimize-contrast; /* CSS3 Proposed                  */
+  -ms-interpolation-mode: nearest-neighbor; /* IE8+                           */
+}
+/* styles/globals.css */
+body {
+  cursor: url("/cursors/C1.png"), auto;
+}
+.cursor-default {
+  cursor: url("/cursors/C1.png"), default;
+}
+.cursor-pointer {
+  cursor: url("/cursors/C2.png"), pointer;
+}
+.cursor-clicking {
+  cursor: url("/cursors/C3.png"), pointer;
+}
+.cursor-grab {
+  cursor: url("/cursors/C4.png"), grab;
+}
+.cursor-grabbing {
+  cursor: url("/cursors/C5.png"), grabbing;
+}
+.cursor-ew-resize {
+  cursor: url("/cursors/C6.png"), ew-resize;
+}
+.cursor-ns-resize {
+  cursor: url("/cursors/C7.png"), ns-resize;
+}
+.cursor-nwse-resize {
+  cursor: url("/cursors/C8.png"), nwse-resize;
+}
+.cursor-nesw-resize {
+  cursor: url("/cursors/C9.png"), nesw-resize;
+}
+.cursor-move {
+  cursor: url("/cursors/C10.png"), move;
+}
+.cursor-not-allowed {
+  cursor: url("/cursors/C11.png"), not-allowed;
+}
 
+* {
+  cursor: url("/cursors/C1.png"), auto;
+  cursor: url("/cursors/C1.png"), default;
+  cursor: url("/cursors/C2.png"), pointer;
+  cursor: url("/cursors/C4.png"), grab;
+  cursor: url("/cursors/C5.png"), grabbing;
+  cursor: url("/cursors/C6.png"), ew-resize;
+  cursor: url("/cursors/C7.png"), ns-resize;
+  cursor: url("/cursors/C8.png"), nwse-resize;
+  cursor: url("/cursors/C9.png"), nesw-resize;
+  cursor: url("/cursors/C10.png"), move;
+  cursor: url("/cursors/C11.png"), not-allowed;
+  cursor: url("/cursors/C1.png"), default;
 }

@@ -12,12 +12,13 @@ export const createCustomTheme = (mode, primaryColor) =>
         paper: mode === "dark" ? "#2a0052" : "#ffffff",
       },
       text: {
-        primary: mode === "dark" ? "#ffffff" : "#000000",
-        secondary: mode === "dark" ? "#b088ff" : "#555555",
+        fontFamily: ["Terminus", "Pixel"].join(","),
+        primary: mode === "dark" ? primaryColor : "#000000",
+        secondary: mode === "dark" ? primaryColor : "#555555",
       },
     },
     typography: {
-      fontFamily: "Terminus, monospace",
+      fontFamily: "Terminus, Pixel",
       fontSize: 16,
     },
     components: {
@@ -52,9 +53,7 @@ export const createCustomTheme = (mode, primaryColor) =>
         styleOverrides: {
           root: {
             borderRadius: 0,
-            
           },
-          
         },
       },
       MuiButtonBase: {

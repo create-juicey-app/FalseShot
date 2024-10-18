@@ -17,8 +17,8 @@ export const apps = [
     filename: "Documents",
     componentProps: {},
     windowProps: {
-      width: 400,
-      height: 300,
+      width: 800,
+      height: 600,
     },
   },
   {
@@ -37,6 +37,17 @@ export const apps = [
     label: "Text Editor",
     icon: "/customize.png",
     filename: "Notepad",
+    componentProps: {},
+    windowProps: {
+      width: 800,
+      height: 800,
+    },
+  },
+  {
+    id: "imgviewer",
+    label: "Image Viewer",
+    icon: "/customize.png",
+    filename: "ImageV",
     componentProps: {},
     windowProps: {
       width: 800,

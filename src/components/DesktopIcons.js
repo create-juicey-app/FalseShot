@@ -8,12 +8,12 @@ const DesktopIcon = ({ icon, label, onClick }) => (
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      cursor: "pointer",
+      cursor: 'url("/cursors/C2.png")',
       width: 64,
       height: 64,
-      m: 1,
+      m: 2,
       p: 2,
-      bottom:0,
+      bottom: 0,
       userSelect: "none",
       "&:hover": {
         backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -21,8 +21,19 @@ const DesktopIcon = ({ icon, label, onClick }) => (
     }}
     onClick={onClick}
   >
-    <Image src={icon} alt={label} width={45} height={45} draggable={false}/>
-    <Typography variant="caption" align="center" sx={{ mt: 0.5 }}>
+    <Image
+      src={icon}
+      priority="low"
+      alt={label}
+      width={45}
+      height={45}
+      draggable={false}
+    />
+    <Typography
+      variant="caption"
+      align="center"
+      sx={{ mt: 0.5, background: "#000000", width: "250%" }}
+    >
       {label}
     </Typography>
   </Box>

@@ -1,18 +1,31 @@
-import React, { useState, useImperativeHandle, forwardRef, lazy, Suspense } from "react";
-import { CircularProgress } from "@mui/material";
+// components/WindowManager.js
+import React, {
+  useState,
+  useImperativeHandle,
+  forwardRef,
+  lazy,
+  Suspense,
+  useEffect,
+} from "react";
+import { CircularProgress, Button } from "@mui/material";
 import Window from "./Window";
-import Modal from './Modal';
+import Modal from "./Modal";
+import ErrorBoundary from "./ErrorBoundary"; // Ensure you have this component
+import path from "path";
 
 const WindowManager = forwardRef(({ apps }, ref) => {
   const [windows, setWindows] = useState([]);
   const [activeWindow, setActiveWindow] = useState(null);
   const [errorModal, setErrorModal] = useState({ isOpen: false, content: "" });
 
+  // Function to handle errors within windows
   const handleError = (error, windowId) => {
     console.error(`Error in window ${windowId}:`, error);
     setErrorModal({
       isOpen: true,
-      content: `An error occurred in ${windows.find(w => w.id === windowId)?.title || 'the application'}: ${error.message}`
+      content: `An error occurred in ${
+        windows.find((w) => w.id === windowId)?.title || "the application"
+      }: ${error.message}`,
     });
   };
 
@@ -28,25 +41,31 @@ const WindowManager = forwardRef(({ apps }, ref) => {
     </div>
   );
 
-  const WindowContent = ({ component: Component, componentProps, windowId }) => {
+  const WindowContent = ({
+    component: Component,
+    componentProps,
+    windowId,
+  }) => {
     return (
-      <React.Suspense fallback={<CircularProgress />}>
+      <Suspense fallback={<CircularProgress />}>
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           onError={(error) => handleError(error, windowId)}
           onReset={() => {
-            // You can add any reset logic here if needed
+            // Add any reset logic here if needed
           }}
         >
           <Component {...componentProps} />
         </ErrorBoundary>
-      </React.Suspense>
+      </Suspense>
     );
   };
 
   useImperativeHandle(ref, () => ({
     openWindow: (app) => {
-      const existingWindow = windows.find((window) => window.title === app.label);
+      const existingWindow = windows.find(
+        (window) => window.title === app.label
+      );
       if (existingWindow) {
         setWindows((prev) =>
           prev.map((window) =>
@@ -60,10 +79,10 @@ const WindowManager = forwardRef(({ apps }, ref) => {
         const newWindow = {
           id: Date.now(),
           title: app.label,
-          component: lazy(() => 
+          component: lazy(() =>
             import(`../apps/${app.filename}`)
-              .then(module => ({ default: module.default }))
-              .catch(error => {
+              .then((module) => ({ default: module.default }))
+              .catch((error) => {
                 handleError(error, newWindow.id);
                 return { default: () => <div>Failed to load component</div> };
               })
@@ -112,6 +131,18 @@ const WindowManager = forwardRef(({ apps }, ref) => {
     setActiveWindow: (id) => setActiveWindow(id),
   }));
 
+  // Automatically open the Documents window when the component mounts
+  useEffect(() => {
+    // Find the Documents app from the apps prop
+    const documentsApp = apps.find((app) => app.label === "Documents");
+
+    if (documentsApp) {
+      ref.current.openWindow(documentsApp);
+    } else {
+      console.warn("Documents app not found in the apps prop.");
+    }
+  }, [apps, ref]);
+
   return (
     <>
       {windows.map((window) => (
@@ -138,41 +169,17 @@ const WindowManager = forwardRef(({ apps }, ref) => {
         title="Application Error"
         content={errorModal.content}
         buttons={[
-          { label: 'Close', onClick: handleCloseErrorModal, color: 'primary', variant: 'contained' },
+          {
+            label: "Close",
+            onClick: handleCloseErrorModal,
+            color: "primary",
+            variant: "contained",
+          },
         ]}
       />
     </>
   );
 });
-
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    this.props.onError(error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.FallbackComponent({
-        error: this.state.error,
-        resetErrorBoundary: () => {
-          this.setState({ hasError: false });
-          this.props.onReset();
-        }
-      });
-    }
-
-    return this.props.children;
-  }
-}
 
 WindowManager.displayName = "WindowManager";
 
