@@ -54,4 +54,15 @@ export const apps = [
       height: 800,
     },
   },
+  {
+    id: "nykomodif",
+    label: "Nyko Text",
+    icon: "/customize.png",
+    filename: "Nyko",
+    componentProps: {},
+    windowProps: {
+      width: 800,
+      height: 500,
+    },
+  },
 ];

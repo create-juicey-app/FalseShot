@@ -1,0 +1,121 @@
+{
+  "characters": [
+    {
+      "name": "Niko",
+      "folder": "niko",
+      "expressions": [
+        { "name": "Normal", "file": "normal.png" },
+        { "name": "Smiling", "file": "smile.png" },
+        { "name": "Shocked", "file": "shocked.png" },
+        { "name": "83c", "file": "83c.png" },
+        { "name": "Distressed", "file": "distressed.png" },
+        { "name": "Niko 2", "file": "niko2.png" },
+        { "name": "Owo", "file": "owo.png" },
+        { "name": "Shy", "file": "shy.png" },
+        { "name": "Upset 2", "file": "upset2.png" },
+        { "name": "Wipe Tears", "file": "wipe_tears.png" },
+        { "name": "Blush", "file": "blush.png" },
+        { "name": "Distressed 2", "file": "distressed2.png" },
+        { "name": "Niko 3", "file": "niko3.png" },
+        { "name": "Owoc", "file": "owoc.png" },
+        { "name": "Blushier", "file": "blushier.png" },
+        { "name": "Distressed Cry", "file": "distressed_cry.png" },
+        { "name": "Niko 4", "file": "niko4.png" },
+        { "name": "Pancakes", "file": "pancakes.png" },
+        { "name": "Creepypasta", "file": "creepypasta.png" },
+        { "name": "Distressed Talk", "file": "distressed_talk.png" },
+        { "name": "Niko 5", "file": "niko5.png" },
+        { "name": "Popcorn", "file": "popcorn.png" },
+        { "name": "Crying", "file": "crying.png" },
+        { "name": "Eye Closed", "file": "eyeclosed.png" },
+        { "name": "Niko 6", "file": "niko6.png" },
+        { "name": "Rage", "file": "rage.png" },
+        { "name": "Derp", "file": "derp.png" },
+        { "name": "Eye Closed Sigh", "file": "eyeclosed_sigh.png" },
+        { "name": "Oof", "file": "oof.png" },
+        { "name": "Derp Flat", "file": "derp_flat.png" },
+        { "name": "Fingerguns", "file": "fingerguns.png" },
+        { "name": "Disgusted", "file": "disgusted.png" },
+        { "name": "Gasmask", "file": "gasmask.png" },
+        { "name": "Ouch", "file": "ouch.png" },
+        { "name": "Shock", "file": "shock.png" },
+        { "name": "Really", "file": "really.png" },
+        { "name": "Sunglasses", "file": "sunglasses.png" },
+        { "name": "Surprise", "file": "surprise.png" },
+        { "name": "Teary", "file": "teary.png" },
+        { "name": "Upset", "file": "upset.png" },
+        { "name": "Upset Meow", "file": "upset_meow.png" },
+        { "name": "Wink", "file": "wink.png" },
+        { "name": "Wtf", "file": "wtf.png" },
+        { "name": "Wink Closed", "file": "winkc.png" },
+        { "name": "Thinking", "file": "thinking.png" },
+        { "name": "Wink P", "file": "winkp.png" },
+        { "name": "What", "file": "what.png" },
+        { "name": "What 2", "file": "what2.png" },
+        { "name": "Wtf 2", "file": "wtf2.png" },
+        { "name": "X3", "file": "x3.png" },
+        { "name": "Xwx", "file": "xwx.png" },
+        { "name": "Uwu", "file": "uwu.png" },
+        { "name": "Yawn", "file": "yawn.png" }
+      ]
+    },
+    {
+      "name": "Nyko",
+      "folder": "nyko",
+      "expressions": [
+        { "name": "Normal", "file": "normal.png" },
+        { "name": "Smiling", "file": "smile.png" },
+        { "name": "Shocked", "file": "shocked.png" },
+        { "name": "83c", "file": "83c.png" },
+        { "name": "Distressed", "file": "distressed.png" },
+        { "name": "Nyko 2", "file": "niko2.png" },
+        { "name": "Upset 2", "file": "upset2.png" },
+        { "name": "Wipe Tears", "file": "wipe_tears.png" },
+        { "name": "Distressed 2", "file": "distressed2.png" },
+        { "name": "Nyko 3", "file": "niko3.png" },
+        { "name": "Distressed Cry", "file": "distressed_cry.png" },
+        { "name": "Nyko 4", "file": "niko4.png" },
+        { "name": "Distressed Talk", "file": "distressed_talk.png" },
+        { "name": "Nyko 5", "file": "niko5.png" },
+        { "name": "Crying", "file": "crying.png" },
+        { "name": "Eye Closed", "file": "eyeclosed.png" },
+        { "name": "Nyko 6", "file": "niko6.png" },
+        { "name": "Rage", "file": "rage.png" },
+        { "name": "Eye Closed Sigh", "file": "eyeclosed_sigh.png" },
+        { "name": "Oof", "file": "oof.png" },
+        { "name": "Disgusted", "file": "disgusted.png" },
+        { "name": "Shock", "file": "shock.png" },
+        { "name": "Really", "file": "really.png" },
+        { "name": "Teary", "file": "teary.png" },
+        { "name": "Upset", "file": "upset.png" },
+        { "name": "Upset Meow", "file": "upset_meow.png" },
+        { "name": "What", "file": "what.png" },
+        { "name": "What 2", "file": "what2.png" },
+        { "name": "Yawn", "file": "yawn.png" }
+      ]
+    },
+    {
+      "name": "Niki",
+      "folder": "niki",
+      "expressions": [
+        { "name": "normal", "file": "normal.png" },
+        { "name": "happy", "file": "happy.png" },
+        { "name": "sad", "file": "sad.png" }
+      ]
+    },
+    {
+      "name": "The World Machine",
+      "folder": "twm",
+      "expressions": [
+        { "name": "normal", "file": "normal.png" },
+        { "name": "curious", "file": "curious.png" },
+        { "name": "alert", "file": "alert.png" }
+      ]
+    }
+  ],
+  "backgrounds": [
+    { "name": "Oneshot", "file": "nikobg.png", "useMask": false },
+    { "name": "Falseshot", "file": "nykobg.png", "useMask": true },
+    { "name": "World Machine", "file": "wmbg.png", "useMask": true }
+  ]
+}

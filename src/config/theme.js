@@ -9,7 +9,7 @@ export const createCustomTheme = (mode, primaryColor) =>
       },
       background: {
         default: mode === "dark" ? "#1a0033" : "#f0f0f0",
-        paper: mode === "dark" ? "#2a0052" : "#ffffff",
+        paper: mode === "dark" ? "#000000" : "#ffffff",
       },
       text: {
         fontFamily: ["Terminus", "Pixel"].join(","),
@@ -29,7 +29,6 @@ export const createCustomTheme = (mode, primaryColor) =>
             font-style: normal;
             font-display: swap;
             font-weight: 400;
-            src: url('/terminus.ttf') format('truetype');
           }
         `,
       },

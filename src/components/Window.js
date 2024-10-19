@@ -22,7 +22,6 @@ const Window = ({
   onClose,
   onMinimize,
   onMaximize,
-  initialPosition,
   isMaximized,
   isMinimized,
   canMaximize,
@@ -30,16 +29,19 @@ const Window = ({
   content,
   componentProps,
   icon,
-  windowProps,
+  width,
+  height,
+  x,
+  y,
 }) => {
   const minWidth = 200;
   const minHeight = 150;
 
   const [windowSize, setWindowSize] = useState({
-    width: windowProps?.width || 400,
-    height: windowProps?.height || 300,
+    width: width || 400,
+    height: height || 300,
   });
-  const [position, setPosition] = useState(initialPosition);
+  const [position, setPosition] = useState({ x: x || 100, y: y || 100 });
   const [LazyComponent, setLazyComponent] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
   const [isSpawning, setIsSpawning] = useState(true);
@@ -54,12 +56,17 @@ const Window = ({
           height: window.innerHeight - topBarHeight,
         });
         setPosition({ x: 0, y: 0 });
+      } else {
+        setWindowSize({
+          width: width || 400,
+          height: height || 300,
+        });
       }
     };
     updateWindowSize();
     window.addEventListener("resize", updateWindowSize);
     return () => window.removeEventListener("resize", updateWindowSize);
-  }, [isMaximized]);
+  }, [isMaximized, width, height]);
 
   useEffect(() => {
     if (Component) {

@@ -1,0 +1,12 @@
+{
+  "error": "ReferenceError: can't access lexical declaration 'themeMode' before initialization",
+  "stackTrace": "\nHome@webpack-internal:///./src/pages/index.js:340:90\nErrorBoundary@webpack-internal:///./src/pages/_app.js:51:9\nMyApp@webpack-internal:///./src/pages/_app.js:59:1\nPathnameContextProviderAdapter@webpack-internal:///./node_modules/next/dist/shared/lib/router/adapters.js:81:42\nErrorBoundary@webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/ErrorBoundary.js:41:9\nReactDevOverlay@webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/ReactDevOverlay.js:33:55\nContainer@webpack-internal:///./node_modules/next/dist/client/index.js:81:1\nAppContainer@webpack-internal:///./node_modules/next/dist/client/index.js:189:24\nRoot@webpack-internal:///./node_modules/next/dist/client/index.js:413:35",
+  "hexDump": [
+    "96 d0 2d f3 ba f9 2c 8f 34 38 66 f3 62 80 fb be",
+    "5b 51 e9 58 e9 f8 00 e4 9a 47 cd f2 83 28 4e e4",
+    "8e db c5 bf 14 8c 01 3c 87 f1 70 78 ee ad 35 82",
+    "59 be 48 72 15 c2 44 3c 66 02 ec 80 1c 3d 6e ae",
+    "a2 85 97 2a a7 65 f7 01 86 5d a2 86 9a f8 6f 38"
+  ],
+  "timestamp": "2024-10-18T19:53:05.087Z"
+}

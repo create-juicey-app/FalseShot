@@ -101,7 +101,7 @@ const WindowManager = forwardRef((props, ref) => {
           position: { x: 100, y: 100 }, // Default position
           isMaximized: false,
           isMinimized: false,
-          ...app.windowProps,
+          ...app.windowProps, // Spread the windowProps here
         },
       ]);
 
