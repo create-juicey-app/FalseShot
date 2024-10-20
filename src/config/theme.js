@@ -12,13 +12,13 @@ export const createCustomTheme = (mode, primaryColor) =>
         paper: mode === "dark" ? "#000000" : "#ffffff",
       },
       text: {
-        fontFamily: ["Pixel"].join(","),
+        fontFamily: ["Pixel", "Arial", "sans-serif"].join(","),
         primary: mode === "dark" ? primaryColor : "#000000",
         secondary: mode === "dark" ? primaryColor : "#555555",
       },
     },
     typography: {
-      fontFamily: "Pixel",
+      fontFamily: ["Pixel", "Arial", "sans-serif"].join(","),
       fontSize: 16,
     },
     components: {
@@ -26,9 +26,14 @@ export const createCustomTheme = (mode, primaryColor) =>
         styleOverrides: `
           @font-face {
             font-family: 'Pixel';
+            src: url('/fonts/pixel.TTF') format('truetype');
+            font-weight: normal;
             font-style: normal;
             font-display: swap;
-            font-weight: 400;
+          }
+          
+          body, html {
+            font-family: 'Pixel', Arial, sans-serif !important;
           }
         `,
       },

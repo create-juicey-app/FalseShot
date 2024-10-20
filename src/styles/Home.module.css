@@ -159,7 +159,18 @@
     position: fixed;
     width: 100%;
   }
+  @font-face {
+    font-family: "Pixel";
+    src: url("/fonts/pixel.TTF") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
 
+  body,
+  html {
+    font-family: "Pixel", Arial, sans-serif !important;
+  }
   .description p {
     align-items: center;
     inset: 0 0 auto;

@@ -19,7 +19,18 @@
   gap: 16px;
   padding: 16px;
 }
+@font-face {
+  font-family: "Pixel";
+  src: url("/fonts/pixel.TTF") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
+body,
+html {
+  font-family: "Pixel", Arial, sans-serif !important;
+}
 .desktop-icon {
   display: flex;
   flex-direction: column;

@@ -1,10 +1,20 @@
-
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
 }
+@font-face {
+  font-family: "Pixel";
+  src: url("/fonts/pixel.TTF") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
+body,
+html {
+  font-family: "Pixel", Arial, sans-serif !important;
+}
 html,
 body {
   max-width: 100vw;
