@@ -123,7 +123,7 @@ function App() {
   useEffect(() => {
     const loadFont = async () => {
       try {
-        const font = new FontFace("Teerminus", "url(/fonts/terminus.ttf)");
+        const font = new FontFace("Teerminus", "url(/fonts/Terminus.ttf)");
         await font.load();
         document.fonts.add(font);
         setTerminusFont(font);
