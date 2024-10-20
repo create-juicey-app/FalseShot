@@ -16,6 +16,7 @@ import {
   Typography,
   CircularProgress,
   Menu,
+  Slider,
   LinearProgress,
 } from "@mui/material";
 import {
@@ -34,6 +35,10 @@ import {
   Close as CloseIcon,
   ContentPaste as ContentPasteIcon,
   Edit as EditIcon,
+  RotateLeft as RotateLeftIcon,
+  RotateRight as RotateRightIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
 } from "@mui/icons-material";
 import axios from "axios";
 import path from "path";
