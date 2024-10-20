@@ -12,20 +12,20 @@ export const createCustomTheme = (mode, primaryColor) =>
         paper: mode === "dark" ? "#000000" : "#ffffff",
       },
       text: {
-        fontFamily: ["Terminus", "Pixel"].join(","),
+        fontFamily: ["Pixel"].join(","),
         primary: mode === "dark" ? primaryColor : "#000000",
         secondary: mode === "dark" ? primaryColor : "#555555",
       },
     },
     typography: {
-      fontFamily: "Terminus, Pixel",
+      fontFamily: "Pixel",
       fontSize: 16,
     },
     components: {
       MuiCssBaseline: {
         styleOverrides: `
           @font-face {
-            font-family: 'Terminus';
+            font-family: 'Pixel';
             font-style: normal;
             font-display: swap;
             font-weight: 400;
