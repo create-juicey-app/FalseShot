@@ -44,17 +44,6 @@ export const apps = [
     },
   },
   {
-    id: "imgviewer",
-    label: "Image Viewer",
-    icon: "/gallery.png",
-    filename: "ImageViewer",
-    componentProps: {},
-    windowProps: {
-      width: 800,
-      height: 800,
-    },
-  },
-  {
     id: "nykomodif",
     label: "TextBox Generator",
     icon: "/terminal.png",

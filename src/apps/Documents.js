@@ -1,4 +1,3 @@
-// apps/Documents.js
 import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
@@ -32,9 +31,191 @@ import {
   MoreVert as MoreVertIcon,
   Refresh as RefreshIcon,
   Upload as UploadIcon,
+  Close as CloseIcon,
+  ContentPaste as ContentPasteIcon,
+  Edit as EditIcon,
 } from "@mui/icons-material";
 import axios from "axios";
 import path from "path";
+// New ImageViewer component
+const ImageViewer = ({ imagePath, onClose }) => {
+  const [imageData, setImageData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [zoom, setZoom] = useState(100);
+  const [rotation, setRotation] = useState(0);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef(null);
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      try {
+        const response = await axios.get(
+          `/api/filesystem/read?filePath=${encodeURIComponent(imagePath)}`,
+          { responseType: "json" }
+        );
+        setImageData(response.data);
+      } catch (err) {
+        console.error("Error fetching image:", err);
+        setError("Failed to load image");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchImage();
+  }, [imagePath]);
+
+  const handleZoomChange = (_, newValue) => setZoom(newValue);
+  const handleRotate = (direction) => {
+    setRotation((prev) => {
+      const newRotation = (prev + direction) % 360;
+      return newRotation < 0 ? newRotation + 360 : newRotation;
+    });
+  };
+
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  return (
+    <Dialog open={true} onClose={onClose} maxWidth="lg" fullWidth>
+      <DialogTitle>
+        Image Viewer
+        <IconButton
+          onClick={onClose}
+          sx={{ position: "absolute", right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          {loading ? (
+            <Typography>Loading...</Typography>
+          ) : error ? (
+            <Typography color="error">{error}</Typography>
+          ) : imageData ? (
+            <>
+              <Box
+                sx={{
+                  position: "relative",
+                  width: "100%",
+                  height: "60vh",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  ref={imageRef}
+                  src={`data:${imageData.mimeType};base64,${imageData.data}`}
+                  alt="Viewed image"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                    transform: `translate(${position.x}px, ${
+                      position.y
+                    }px) scale(${zoom / 100}) rotate(${rotation}deg)`,
+                    transition: "transform 0.3s ease-out",
+                    cursor: isDragging ? "grabbing" : "grab",
+                    userSelect: "none",
+                    WebkitUserSelect: "none",
+                    MozUserSelect: "none",
+                    msUserSelect: "none",
+                  }}
+                  onMouseDown={handleMouseDown}
+                  draggable="false"
+                />
+              </Box>
+              <Grid container spacing={2} alignItems="center" sx={{ mt: 2 }}>
+                <Grid item>
+                  <IconButton onClick={() => handleRotate(-90)}>
+                    <RotateLeftIcon />
+                  </IconButton>
+                </Grid>
+                <Grid item>
+                  <ZoomOutIcon />
+                </Grid>
+                <Grid item xs>
+                  <Slider
+                    value={zoom}
+                    onChange={handleZoomChange}
+                    min={10}
+                    max={400}
+                  />
+                </Grid>
+                <Grid item>
+                  <ZoomInIcon />
+                </Grid>
+                <Grid item>
+                  <IconButton onClick={() => handleRotate(90)}>
+                    <RotateRightIcon />
+                  </IconButton>
+                </Grid>
+              </Grid>
+              <Paper elevation={3} sx={{ p: 2, mt: 2, width: "100%" }}>
+                <Typography variant="h6" gutterBottom>
+                  Image Information
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Typography>
+                      <strong>File Path:</strong> {imageData.filePath}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography>
+                      <strong>MIME Type:</strong> {imageData.mimeType}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography>
+                      <strong>File Size:</strong>{" "}
+                      {((imageData.data.length * 3) / 4 / 1024).toFixed(2)} KB
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </>
+          ) : (
+            <Typography>No image data available</Typography>
+          )}
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const Documents = ({ initialPath = "Documents", windowManagerRef }) => {
   // State variables
@@ -57,7 +238,13 @@ const Documents = ({ initialPath = "Documents", windowManagerRef }) => {
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-
+  const [viewingImage, setViewingImage] = useState(null);
+  const [renameDialog, setRenameDialog] = useState({
+    open: false,
+    item: null,
+  });
+  const [newName, setNewName] = useState("");
+  const [clipboardItems, setClipboardItems] = useState([]);
   // Context Menu State
   const [contextMenu, setContextMenu] = useState(null);
   const [contextItem, setContextItem] = useState(null);
@@ -204,6 +391,29 @@ const Documents = ({ initialPath = "Documents", windowManagerRef }) => {
       );
     }
   };
+  const handleRename = async () => {
+    if (!newName.trim()) {
+      showSnackbar("New name cannot be empty", "error");
+      return;
+    }
+
+    try {
+      await axios.post("/api/filesystem/rename", {
+        oldPath: `${currentDir}/${renameDialog.item.name}`,
+        newPath: `${currentDir}/${newName.trim()}`,
+      });
+      showSnackbar("Item renamed successfully", "success");
+      setRenameDialog({ open: false, item: null });
+      setNewName("");
+      fetchDirectory(currentDir);
+    } catch (error) {
+      console.error(error);
+      showSnackbar(
+        error.response?.data?.error || "Error renaming item",
+        "error"
+      );
+    }
+  };
 
   // Handle deleting selected items
   const handleDelete = async () => {
@@ -290,31 +500,34 @@ const Documents = ({ initialPath = "Documents", windowManagerRef }) => {
 
   // Handle actions from context menu
   const handleContextAction = (action) => {
-    console.log("action: " + action);
-    if (action === "open") {
-      if (contextItem.isDirectory) {
-        navigateTo(`${currentDir}/${contextItem.name}`);
-      } else {
-        console.log(windowManagerRef)
-        // Open image in a new window via WindowManager
-        if (windowManagerRef?.current?.openWindow) {
-          windowManagerRef.current.openWindow({
-            title: contextItem.name,
-            component: React.lazy(() => import("../apps/ImageViewer")),
-            componentProps: { filePath: `${currentDir}/${contextItem.name}` },
-            icon: "🖼️",
-          });
+    console.log(`Action: ${action}`);
+
+    switch (action) {
+      case "open":
+        if (contextItem.isDirectory) {
+          navigateTo(`${currentDir}/${contextItem.name}`);
+        } else if (isImageFile(contextItem.name)) {
+          setViewingImage(`${currentDir}/${contextItem.name}`);
         } else {
-          showSnackbar("Window Manager is not available", "error");
+          console.log("File type not supported for viewing");
         }
-      }
-    } else if (action === "copy") {
-      setOpenCopyDialog(true);
-    } else if (action === "delete") {
-      handleDelete();
-    } else if (action === "rename") {
-      // Implement rename functionality if needed
-      showSnackbar("Rename functionality not implemented yet.", "info");
+        break;
+
+      case "copy":
+        handleCopyToClipboard();
+        break;
+      case "paste":
+        handlePaste();
+        break;
+      case "delete":
+        handleDelete();
+        break;
+      case "rename":
+        setRenameDialog({ open: true, item: contextItem });
+        setNewName(contextItem.name);
+        break;
+      default:
+        showSnackbar("Action not supported", "error");
     }
     handleCloseContextMenu();
   };
@@ -326,27 +539,74 @@ const Documents = ({ initialPath = "Documents", windowManagerRef }) => {
 
   // Handle item double-click (navigate into directory or open image)
   // apps/Documents.js
-const handleItemDoubleClick = (item) => {
-  if (item.isDirectory) {
-    navigateTo(`${currentDir}/${item.name}`);
-  } else {
-    // Open image in a new window via WindowManager using filename
-    if (windowManagerRef?.current?.openWindow) {
-      windowManagerRef.current.openWindow({
-        label: item.name, // Ensure consistency with `app.label`
-        filename: "ImageViewer", // Use the filename as defined in apps.js
-        componentProps: { filePath: `${currentDir}/${item.name}` },
-        icon: "🖼️",
-      });
+  const handleItemDoubleClick = (item) => {
+    if (item.isDirectory) {
+      navigateTo(`${currentDir}/${item.name}`);
+    } else if (isImageFile(item.name)) {
+      setViewingImage(`${currentDir}/${item.name}`);
     } else {
-      showSnackbar("Window Manager is not available", "error");
+      // Handle other file types if needed
+      console.log("File type not supported for viewing");
     }
-  }
-};
+  };
 
-  // Handle keyboard shortcuts (e.g., Delete key)
+  const handleCopyToClipboard = () => {
+    const itemsToCopy = selectedItems.map((name) => `${currentDir}/${name}`);
+    setClipboardItems(itemsToCopy);
+    navigator.clipboard
+      .writeText(itemsToCopy.join("\n"))
+      .then(() => showSnackbar("Items copied to clipboard", "success"))
+      .catch((err) => showSnackbar("Failed to copy to clipboard", "error"));
+  };
+
+  // Handle paste
+  const handlePaste = async () => {
+    if (clipboardItems.length === 0) {
+      showSnackbar("Nothing to paste", "info");
+      return;
+    }
+
+    try {
+      await Promise.all(
+        clipboardItems.map((sourcePath) =>
+          axios.post("/api/filesystem/copy", {
+            source: sourcePath,
+            destination: currentDir,
+          })
+        )
+      );
+      showSnackbar("Items pasted successfully", "success");
+      fetchDirectory(currentDir);
+    } catch (error) {
+      console.error(error);
+      showSnackbar(
+        error.response?.data?.error || "Error pasting items",
+        "error"
+      );
+    }
+  };
+
+  // Handle keyboard shortcuts
   const handleKeyDown = (event) => {
-    if (event.key === "Delete") {
+    if (event.ctrlKey || event.metaKey) {
+      switch (event.key.toLowerCase()) {
+        case "c":
+          event.preventDefault();
+          handleCopyToClipboard();
+          break;
+        case "v":
+          event.preventDefault();
+          handlePaste();
+          break;
+        case "x":
+          event.preventDefault();
+          handleCopyToClipboard();
+          handleDelete();
+          break;
+        default:
+          break;
+      }
+    } else if (event.key === "Delete") {
       handleDelete();
     }
   };
@@ -621,6 +881,17 @@ const handleItemDoubleClick = (item) => {
                 >
                   <DeleteIcon />
                 </IconButton>
+                <Tooltip title="Paste">
+                  <span>
+                    <IconButton
+                      color="inherit"
+                      onClick={handlePaste}
+                      disabled={clipboardItems.length === 0}
+                    >
+                      <ContentPasteIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
               </span>
             </Tooltip>
           </Box>
@@ -688,7 +959,7 @@ const handleItemDoubleClick = (item) => {
                     ) : isImageFile(item.name) ? (
                       <img
                         src={`/api/filesystem/thumbnail?filePath=${encodeURIComponent(
-                          `${currentDir}/${item.name}`.replace(/^\/+/, '')
+                          `${currentDir}/${item.name}`.replace(/^\/+/, "")
                         )}&size=100`}
                         alt={item.name}
                         style={{
@@ -766,7 +1037,7 @@ const handleItemDoubleClick = (item) => {
                     ) : isImageFile(item.name) ? (
                       <img
                         src={`/api/filesystem/thumbnail?filePath=${encodeURIComponent(
-                          `${currentDir}/${item.name}`.replace(/^\/+/, '')
+                          `${currentDir}/${item.name}`.replace(/^\/+/, "")
                         )}&size=40`}
                         alt={item.name}
                         style={{
@@ -816,7 +1087,36 @@ const handleItemDoubleClick = (item) => {
           )}
         </Box>
       </Box>
-
+      {viewingImage && (
+        <ImageViewer
+          imagePath={viewingImage}
+          onClose={() => setViewingImage(null)}
+        />
+      )}
+      <Dialog
+        open={renameDialog.open}
+        onClose={() => setRenameDialog({ open: false, item: null })}
+      >
+        <DialogTitle>Rename Item</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="New Name"
+            fullWidth
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRenameDialog({ open: false, item: null })}>
+            Cancel
+          </Button>
+          <Button onClick={handleRename} variant="contained" color="primary">
+            Rename
+          </Button>
+        </DialogActions>
+      </Dialog>
       {/* Create Folder Dialog */}
       <Dialog
         open={openCreateFolderDialog}
@@ -929,12 +1229,16 @@ const handleItemDoubleClick = (item) => {
           <FileCopyIcon fontSize="small" style={{ marginRight: 8 }} />
           <Typography variant="inherit">Copy</Typography>
         </MenuItem>
+        <MenuItem onClick={() => handleContextAction("paste")}>
+          <ContentPasteIcon fontSize="small" style={{ marginRight: 8 }} />
+          <Typography variant="inherit">Paste</Typography>
+        </MenuItem>
         <MenuItem onClick={() => handleContextAction("delete")}>
           <DeleteIcon fontSize="small" style={{ marginRight: 8 }} />
           <Typography variant="inherit">Delete</Typography>
         </MenuItem>
         <MenuItem onClick={() => handleContextAction("rename")}>
-          <MoreVertIcon fontSize="small" style={{ marginRight: 8 }} />
+          <EditIcon fontSize="small" style={{ marginRight: 8 }} />
           <Typography variant="inherit">Rename</Typography>
         </MenuItem>
       </Menu>
@@ -942,4 +1246,4 @@ const handleItemDoubleClick = (item) => {
   );
 };
 
-export default Documents ;
+export default Documents;
