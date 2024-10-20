@@ -1,0 +1,12 @@
+{
+  "error": "TypeError: windowManagerRef is undefined",
+  "stackTrace": "\nTaskbar@webpack-internal:///./src/components/Taskbar.js:43:70\ndiv\nwithEmotionCache/<@webpack-internal:///./node_modules/@emotion/react/dist/emotion-element-7a1343fa.browser.development.esm.js:70:66\nBox@webpack-internal:///./node_modules/@mui/system/esm/createBox/createBox.js:32:81\nDesktop@webpack-internal:///./src/components/Desktop.js:24:80\ndiv\nwithEmotionCache/<@webpack-internal:///./node_modules/@emotion/react/dist/emotion-element-7a1343fa.browser.development.esm.js:70:66\nBox@webpack-internal:///./node_modules/@mui/system/esm/createBox/createBox.js:32:81\nBootSequence@webpack-internal:///./src/components/BootSequence.js:17:24\nDefaultPropsProvider@webpack-internal:///./node_modules/@mui/system/esm/DefaultPropsProvider/DefaultPropsProvider.js:19:30\nRtlProvider@webpack-internal:///./node_modules/@mui/system/esm/RtlProvider/index.js:15:21\nThemeProvider@webpack-internal:///./node_modules/@mui/private-theming/ThemeProvider/ThemeProvider.js:46:7\nThemeProvider@webpack-internal:///./node_modules/@mui/system/esm/ThemeProvider/ThemeProvider.js:64:7\nThemeProviderNoVars@webpack-internal:///./node_modules/@mui/material/styles/ThemeProviderNoVars.js:16:43\nThemeProvider@webpack-internal:///./node_modules/@mui/material/styles/ThemeProvider.js:18:31\nHome@webpack-internal:///./src/pages/index.js:19:86\nErrorBoundary@webpack-internal:///./src/pages/_app.js:51:9\nMyApp@webpack-internal:///./src/pages/_app.js:59:1\nPathnameContextProviderAdapter@webpack-internal:///./node_modules/next/dist/shared/lib/router/adapters.js:81:42\nErrorBoundary@webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/ErrorBoundary.js:41:9\nReactDevOverlay@webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/ReactDevOverlay.js:33:55\nContainer@webpack-internal:///./node_modules/next/dist/client/index.js:81:1\nAppContainer@webpack-internal:///./node_modules/next/dist/client/index.js:189:24\nRoot@webpack-internal:///./node_modules/next/dist/client/index.js:413:35",
+  "hexDump": [
+    "3b 50 89 6f 7f e7 c7 24 ae 3f 46 3c 68 60 d6 76",
+    "76 38 bb b8 8b 56 2e 12 07 26 79 04 3b 21 86 96",
+    "4f a8 71 bb 17 12 e5 e2 4b 85 b0 90 13 c5 6e ee",
+    "b2 4c 2f b8 f8 ba 4c 37 a2 b8 97 6c c3 0b 50 dc",
+    "ae 42 f0 b8 74 65 29 81 6f 46 1c 39 17 27 23 e2"
+  ],
+  "timestamp": "2024-10-20T00:17:03.016Z"
+}

@@ -97,25 +97,49 @@
     {
       "name": "Niki",
       "folder": "niki",
-      "expressions": [
-        { "name": "normal", "file": "normal.png" },
-        { "name": "happy", "file": "happy.png" },
-        { "name": "sad", "file": "sad.png" }
-      ]
+      "expressions": []
     },
     {
       "name": "The World Machine",
       "folder": "twm",
       "expressions": [
-        { "name": "normal", "file": "normal.png" },
-        { "name": "curious", "file": "curious.png" },
-        { "name": "alert", "file": "alert.png" }
+        { "name": "83c", "file": "83c.png" },
+        { "name": "Distressed Meow", "file": "distressed_meow.png" },
+        { "name": "En", "file": "en.png" },
+        { "name": "En 2", "file": "en2.png" },
+        { "name": "En 3", "file": "en3.png" },
+        { "name": "En 4", "file": "en4.png" },
+        { "name": "En 5", "file": "en5.png" },
+        { "name": "En 6", "file": "en6.png" },
+        { "name": "Eye Closed", "file": "eyeclosed.png" },
+        { "name": "Eye Closed 2", "file": "eyeclosed2.png" },
+        { "name": "Less Sad", "file": "less_sad.png" },
+        { "name": "Pancakes", "file": "pancakes.png" },
+        { "name": "Smile", "file": "smile.png" },
+        { "name": "Speak", "file": "speak.png" },
+        { "name": "Sad", "file": "sad.png" },
+        { "name": "Surprised", "file": "surprised.png" },
+        { "name": "Upset 2", "file": "upset2.png" },
+        { "name": "Upset Meow", "file": "upset_meow.png" },
+        { "name": "Upset", "file": "upset.png" },
+        { "name": "What", "file": "what.png" },
+        { "name": "What 2", "file": "what2.png" },
+        { "name": "Wtf", "file": "wtf.png" },
+        { "name": "Wtf 2", "file": "wtf2.png" },
+        { "name": "Yawn", "file": "yawn.png" },
+        { "name": "Cry", "file": "cry.png" },
+        { "name": "Distressed", "file": "distressed.png" },
+        { "name": "Distressed 2", "file": "distressed2.png" },
+        { "name": "Distressed Talk", "file": "distressed_talk.png" },
+        { "name": "Gasmask", "file": "gasmask.png" },
+        { "name": "Huh", "file": "huh.png" },
+        { "name": "Shock", "file": "shock.png" }
       ]
     }
   ],
   "backgrounds": [
     { "name": "Oneshot", "file": "nikobg.png", "useMask": false },
     { "name": "Falseshot", "file": "nykobg.png", "useMask": true },
-    { "name": "World Machine", "file": "wmbg.png", "useMask": true }
+    { "name": "World Machine", "file": "wmbg.png", "useMask": false }
   ]
 }

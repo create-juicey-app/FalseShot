@@ -24,7 +24,7 @@ export const apps = [
   {
     id: "logsviewer",
     label: "Logs Viewer",
-    icon: "/customize.png",
+    icon: "/logs.png",
     filename: "LogsViewer",
     componentProps: {},
     windowProps: {
@@ -35,7 +35,7 @@ export const apps = [
   {
     id: "notepad",
     label: "Text Editor",
-    icon: "/customize.png",
+    icon: "/text.png",
     filename: "Notepad",
     componentProps: {},
     windowProps: {
@@ -46,7 +46,7 @@ export const apps = [
   {
     id: "imgviewer",
     label: "Image Viewer",
-    icon: "/customize.png",
+    icon: "/gallery.png",
     filename: "ImageViewer",
     componentProps: {},
     windowProps: {
@@ -56,8 +56,8 @@ export const apps = [
   },
   {
     id: "nykomodif",
-    label: "Nyko Text",
-    icon: "/customize.png",
+    label: "TextBox Generator",
+    icon: "/terminal.png",
     filename: "Nyko",
     componentProps: {},
     windowProps: {

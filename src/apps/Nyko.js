@@ -334,26 +334,26 @@ function App() {
 
         // Create a temporary canvas for the expression
         const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = 98;
-        tempCanvas.height = 98;
+        tempCanvas.width = 96;
+        tempCanvas.height = 96;
         const tempCtx = tempCanvas.getContext("2d");
 
         // Draw expression on temporary canvas
-        tempCtx.drawImage(expressionImg, 0, 0, 98, 98);
+        tempCtx.drawImage(expressionImg, 0, 0, 96, 96);
 
         // Apply mask if needed
         if (useMask && maskImg) {
           tempCtx.globalCompositeOperation = "destination-in";
-          tempCtx.drawImage(maskImg, 0, 0, 98, 98);
+          tempCtx.drawImage(maskImg, 0, 0, 96, 96);
         }
 
         // Draw the masked expression onto the main canvas
         offscreenCtx.drawImage(
           tempCanvas,
           offscreenCanvasRef.current.width - 114,
-          14,
-          98,
-          98
+          16,
+          96,
+          96
         );
 
         // Text rendering with automatic line breaks

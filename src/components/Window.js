@@ -189,26 +189,42 @@ const Window = ({
               color="inherit"
               onClick={handleMinimize}
               size="small"
+              sx={{ marginRight: 0.3 }}
             >
-              <MinimizeIcon fontSize="small" />
+              <Image
+                src="/Minimize.png"
+                alt="Minimize the window"
+                width={24}
+                height={24}
+              />
             </IconButton>
-            {canMaximize && (
-              <IconButton
-                edge="end"
-                color="inherit"
-                onClick={onMaximize}
-                size="small"
-              >
-                <MaximizeIcon fontSize="small" />
-              </IconButton>
-            )}
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={onMaximize}
+              size="small"
+              sx={{ marginRight: 0.3 }}
+            >
+              <Image
+                src="/Maximize.png"
+                alt="Maximize the window"
+                width={24}
+                height={24}
+              />
+            </IconButton>
             <IconButton
               edge="end"
               color="inherit"
               onClick={handleClose}
               size="small"
+              sx={{ marginRight: 1 }}
             >
-              <CloseIcon fontSize="small" />
+              <Image
+                src="/Close.png"
+                alt="Close the window"
+                width={24}
+                height={24}
+              />
             </IconButton>
           </Toolbar>
         </AppBar>
