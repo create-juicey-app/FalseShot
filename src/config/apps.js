@@ -11,8 +11,8 @@ export const apps = [
     },
   },
   {
-    id: "documents",
-    label: "Documents",
+    id: "fileex",
+    label: "File Explorer",
     icon: "/folder.png",
     filename: "Documents",
     componentProps: {},

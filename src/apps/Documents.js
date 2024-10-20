@@ -222,7 +222,7 @@ const ImageViewer = ({ imagePath, onClose }) => {
   );
 };
 
-const Documents = ({ initialPath = "Documents", windowManagerRef }) => {
+const Documents = ({ initialPath = "/", windowManagerRef }) => {
   // State variables
   const [currentDir, setCurrentDir] = useState("/"); // Will set to initialPath on load
   const [items, setItems] = useState([]);
