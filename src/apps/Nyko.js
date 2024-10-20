@@ -107,12 +107,16 @@ function App() {
     },
     []
   );
+
+  const [fontSize, setFontSize] = useState(28); // Default font size
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const offscreenCanvasRef = useRef(null);
   const offscreenCtxRef = useRef(null);
+
   const renderRef = useRef(null);
   const imageCache = useRef({});
+
   const ResponsiveGrid = styled(Box)(({ theme }) => ({
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))",
@@ -322,18 +326,52 @@ function App() {
   // Handle message input with line limit
   const handleMessageChange = useCallback((e) => {
     const text = e.target.value;
-    const lines = text.split("\n");
-    if (lines.length > 3) {
+    const maxLines = 5; // Maximum number of lines
+    const fontSize = 28; // Example: use dynamic fontSize state value here
+
+    // Dynamically adjust maxLineLength based on font size
+    let maxLineLength = Math.floor(30 * (30 / fontSize));
+
+    // Split the text into lines, preserving user-entered line breaks
+    let lines = text.split("\n");
+
+    // Process each line to ensure max line length
+    let formattedLines = [];
+    lines.forEach((line, index) => {
+      while (line.length > maxLineLength) {
+        let splitAt = line.lastIndexOf(" ", maxLineLength);
+        if (splitAt === -1) splitAt = maxLineLength; // In case of long words
+        formattedLines.push(line.substring(0, splitAt));
+        line = line.substring(splitAt + 1);
+      }
+      formattedLines.push(line);
+    });
+
+    // Enforce the maxLines limit
+    formattedLines = formattedLines.slice(0, maxLines);
+
+    const formattedText = formattedLines.join("\n");
+
+    if (formattedLines.length > maxLines) {
       setErrorMessage(
-        "Your message is too long, only three lines of text can be rendered!"
+        `Your message is too long, only ${maxLines} lines of text can be rendered!`
       );
       setError(true);
       setIsErrorModalOpen(true);
     } else {
       setError(false);
       setErrorMessage("");
-      setMessage(text);
+      setMessage(formattedText);
       setIsDirty(true);
+
+      // Adjust font size based on line count
+      if (formattedLines.length === 5) {
+        setFontSize(16); // Smallest font size for 5 lines
+      } else if (formattedLines.length === 4) {
+        setFontSize(20); // Medium font size for 4 lines
+      } else {
+        setFontSize(28); // Default font size for 1-3 lines
+      }
     }
   }, []);
 
@@ -610,17 +648,21 @@ function App() {
         );
 
         // Text rendering with automatic line breaks
-        offscreenCtx.font = `28px ${terminusFont.family}`;
+        offscreenCtx.font = `${fontSize}px ${terminusFont.family}`;
         offscreenCtx.fillStyle = "white";
         offscreenCtx.textAlign = "left";
 
         const maxWidth = offscreenCanvasRef.current.width - 144; // Leave space for the expression
-        const lineHeight = 32;
-        const maxLines = 3;
+        const lineHeight = fontSize + 4; // Adjust line height based on font size
         const lines = message.split("\n");
-        let y = 39;
+        let y = fontSize + 11; // Adjust starting y position based on font size
 
-        for (let i = 0; i < lines.length && i < maxLines; i++) {
+        for (let i = 0; i < lines.length; i++) {
+          offscreenCtx.fillText(lines[i], 30, y);
+          y += lineHeight;
+        }
+
+        for (let i = 0; i < lines.length && i; i++) {
           const words = lines[i].split(" ");
           let line = "";
 
@@ -674,6 +716,7 @@ function App() {
     config,
     useMask,
     selectedCustomExpression,
+    fontSize, // Add fontSize to the dependency array
   ]);
   const handleCopyImage = useCallback(() => {
     if (imageData) {
@@ -902,15 +945,13 @@ function App() {
                 id="message"
                 placeholder="What's the character going to say?"
                 multiline
-                rows={3}
+                rows={5}
                 fullWidth
                 variant="outlined"
                 value={message}
                 onChange={handleMessageChange}
+                inputProps={{ maxLength: 250 }}
                 sx={{ mt: 1 }}
-                inputProps={{
-                  maxLength: 150,
-                }}
               />
             </Box>
 
