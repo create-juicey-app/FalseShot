@@ -24,11 +24,16 @@ import {
   Switch,
   FormControlLabel,
   CircularProgress,
+  ButtonGroup,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import UploadIcon from "@mui/icons-material/Upload";
 import { styled } from "@mui/system";
 import Modal from "../components/Modal";
+import { keyframes } from "@mui/system"; // Add this import
 // Styled Components
 const AppContainer = styled(Box)(({ theme }) => ({
   display: "flex",
@@ -63,6 +68,16 @@ const RenderedImage = styled("img")(({ theme }) => ({
 const DownloadButton = styled(Button)(({ theme }) => ({
   marginTop: theme.spacing(2),
 }));
+const CustomExpressionImage = styled("img")(({ theme }) => ({
+  width: "96px",
+  height: "96px",
+  borderRadius: "5px",
+  cursor: "pointer",
+  "&:hover": {
+    boxShadow: theme.shadows[3],
+  },
+  imageRendering: "pixelated",
+}));
 
 function App() {
   const [config, setConfig] = useState(null);
@@ -78,13 +93,112 @@ function App() {
   const [isDirty, setIsDirty] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const [expandedCharacter, setExpandedCharacter] = useState(null);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  4;
+  const [imageData, setImageData] = useState(null);
+  const [expandedBackground, setExpandedBackground] = useState(null);
+  const [customExpressions, setCustomExpressions] = useState([]);
+  const [selectedCustomExpression, setSelectedCustomExpression] =
+    useState(null);
+  const handleBackgroundAccordionChange = useCallback(
+    (backgroundName) => (event, isExpanded) => {
+      setExpandedBackground(isExpanded ? backgroundName : null);
+    },
+    []
+  );
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const offscreenCanvasRef = useRef(null);
   const offscreenCtxRef = useRef(null);
   const renderRef = useRef(null);
   const imageCache = useRef({});
+  const ResponsiveGrid = styled(Box)(({ theme }) => ({
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))",
+    gap: theme.spacing(1),
+    justifyContent: "center",
+  }));
+
+  const CharacterImage = styled("img")(({ theme }) => ({
+    width: "96px",
+    height: "96px",
+    borderRadius: "5px",
+    cursor: "pointer",
+    "&:hover": {
+      boxShadow: theme.shadows[3],
+    },
+    imageRendering: "pixelated",
+  }));
+  const BackgroundThumbnail = styled("div")(({ theme }) => ({
+    width: "200px",
+    height: "42px",
+    borderRadius: "5px",
+    cursor: "pointer",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    border: `2px solid ${theme.palette.background.paper}`,
+    "&:hover": {
+      boxShadow: theme.shadows[3],
+    },
+  }));
+  const AccordionHeader = styled(AccordionSummary)(({ theme }) => ({
+    backgroundColor: theme.palette.grey[900],
+    color: theme.palette.common.white,
+    "& .MuiAccordionSummary-content": {
+      margin: "4px 0",
+    },
+  }));
+
+  const gradientAnimation = keyframes`
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+`;
+
+  const BackgroundItem = styled(Box)(({ theme }) => ({
+    width: "100%",
+    height: "60px",
+    position: "relative",
+    cursor: "pointer",
+    overflow: "hidden",
+    marginBottom: theme.spacing(1),
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundImage:
+        "linear-gradient(to right, transparent, black 50%, black)",
+      opacity: 1,
+      animation: `${gradientAnimation} 3s infinite`, // Add the animation here
+    },
+    "&:hover": {
+      boxShadow: theme.shadows[4],
+      "&::before": {
+        backgroundImage:
+          "linear-gradient(to right, transparent, rgba(0,0,0,0.5) 50%, black)",
+      },
+    },
+  }));
+
+  const BackgroundName = styled(Typography)(({ theme }) => ({
+    position: "absolute",
+    right: theme.spacing(2),
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: theme.palette.common.white,
+    fontSize: "1.5rem",
+    fontWeight: "bold",
+    zIndex: 1,
+    transition: "color 0.3s ease",
+  }));
 
   useEffect(() => {
     setIsMounted(true);
@@ -185,6 +299,26 @@ function App() {
     setIsDirty(true);
   }, [isMounted, config]);
 
+  const handleCustomExpressionUpload = useCallback((event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newCustomExpression = {
+          id: Date.now(),
+          name: file.name,
+          data: e.target.result,
+        };
+        setCustomExpressions((prev) => [...prev, newCustomExpression]);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+  const handleCustomExpressionSelect = useCallback((customExpression) => {
+    setSelectedCustomExpression(customExpression);
+    setExpression(null);
+    setIsDirty(true);
+  }, []);
   // Handle message input with line limit
   const handleMessageChange = useCallback((e) => {
     const text = e.target.value;
@@ -222,27 +356,27 @@ function App() {
   // Handle expression selection
   const handleExpressionChange = useCallback((expr) => {
     setExpression(expr);
+    setSelectedCustomExpression(null);
     setIsDirty(true);
   }, []);
 
   // Handle character selection
   const handleCharacterChange = useCallback(
-    (event) => {
-      const character = event.target.value;
-      setSelectedCharacter(character);
-      setExpression(
-        config.characters.find((c) => c.name === character).expressions[0].name
-      );
+    (characterName) => {
+      setSelectedCharacter(characterName);
+      const character = config.characters.find((c) => c.name === characterName);
+      if (character && character.expressions.length > 0) {
+        setExpression(character.expressions[0].name);
+      }
+      setSelectedCustomExpression(null);
       setIsDirty(true);
     },
     [config]
   );
-
-  // Handle background selection
   const handleBackgroundChange = useCallback(
-    (event) => {
+    (backgroundName) => {
       const background = config.backgrounds.find(
-        (b) => b.name === event.target.value
+        (b) => b.name === backgroundName
       );
       setSelectedBackground(background.name);
       setUseMask(background.useMask);
@@ -250,6 +384,41 @@ function App() {
     },
     [config]
   );
+
+  const backgroundSelection = useMemo(() => {
+    if (!config) return null;
+
+    return (
+      <Box mt={2}>
+        <Typography variant="h5" mb={1}>
+          Backgrounds
+        </Typography>
+        {config.backgrounds.map((bg) => (
+          <BackgroundItem
+            key={bg.name}
+            onClick={() => handleBackgroundChange(bg.name)}
+            sx={{
+              backgroundImage: `url(/backgrounds/${bg.file})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              border:
+                selectedBackground === bg.name ? "2px solid #FFA500" : "none",
+            }}
+          >
+            <BackgroundName
+              sx={{
+                color: selectedBackground === bg.name ? "#FFA500" : "white",
+              }}
+            >
+              {bg.name}
+            </BackgroundName>
+          </BackgroundItem>
+        ))}
+      </Box>
+    );
+  }, [config, selectedBackground, handleBackgroundChange]);
+
+  // Handle background selection
 
   // Handle mask toggle
   const handleMaskToggle = useCallback((event) => {
@@ -274,8 +443,89 @@ function App() {
     });
   }, []);
 
+  const handleCharacterAccordionChange = useCallback(
+    (characterName) => (event, isExpanded) => {
+      setExpandedCharacter(isExpanded ? characterName : null);
+    },
+    []
+  );
+  const characterAccordions = useMemo(() => {
+    if (!config) return null;
+
+    return config.characters.map((character) => (
+      <Accordion
+        key={character.name}
+        expanded={expandedCharacter === character.name}
+        onChange={handleCharacterAccordionChange(character.name)}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls={`${character.name}-content`}
+          id={`${character.name}-header`}
+        >
+          <Box display="flex" alignItems="center">
+            <CharacterImage
+              src={`/faces/${character.folder}/${
+                character.expressions[0]?.file || ""
+              }`}
+              alt={character.name}
+            />
+            <Typography variant="h4" sx={{ ml: 2 }}>
+              {character.name}
+            </Typography>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <ResponsiveGrid>
+            {character.expressions.map((expr) => (
+              <Tooltip key={expr.name} title={expr.name}>
+                <Box
+                  component="img"
+                  src={`/faces/${character.folder}/${expr.file}`}
+                  alt={expr.name}
+                  onClick={() => {
+                    handleCharacterChange(character.name);
+                    handleExpressionChange(expr.name);
+                  }}
+                  sx={{
+                    width: "96px",
+                    height: "96px",
+                    border:
+                      selectedCharacter === character.name &&
+                      expression === expr.name
+                        ? "2px solid"
+                        : "2px solid transparent",
+                    borderColor:
+                      selectedCharacter === character.name &&
+                      expression === expr.name
+                        ? "primary.main"
+                        : "transparent",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    "&:hover": {
+                      borderColor: "primary.light",
+                    },
+                    imageRendering: "pixelated",
+                  }}
+                />
+              </Tooltip>
+            ))}
+          </ResponsiveGrid>
+        </AccordionDetails>
+      </Accordion>
+    ));
+  }, [
+    config,
+    expandedCharacter,
+    selectedCharacter,
+    expression,
+    handleCharacterAccordionChange,
+    handleCharacterChange,
+    handleExpressionChange,
+  ]);
+
   // Render the output image
-  // Render the output image
+
   useEffect(() => {
     if (
       !isMounted ||
@@ -294,7 +544,7 @@ function App() {
 
       if (!ctx || !offscreenCtx) {
         setErrorMessage(
-          "Failed to render image. Please try refreshing the page."
+          "Something went wrong, please send console output to juicey ):"
         );
         setError(true);
         return;
@@ -310,11 +560,14 @@ function App() {
 
         const [backgroundImg, expressionImg, maskImg] = await Promise.all([
           loadImage(`/backgrounds/${background.file}`),
-          loadImage(
-            `/faces/${character.folder}/${
-              character.expressions.find((e) => e.name === expression).file
-            }`
-          ),
+          selectedCustomExpression
+            ? loadImage(selectedCustomExpression.data)
+            : loadImage(
+                `/faces/${character.folder}/${
+                  character.expressions.find((e) => e.name === expression)
+                    ?.file || character.expressions[0].file
+                }`
+              ),
           useMask ? loadImage("/cmask.png") : null,
         ]);
 
@@ -397,14 +650,10 @@ function App() {
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         ctx.drawImage(offscreenCanvasRef.current, 0, 0);
 
-        if (renderRef.current) {
-          renderRef.current.src = canvasRef.current.toDataURL();
-        } else {
-          setErrorMessage(
-            "Failed to update rendered image. Please try refreshing the page."
-          );
-          setError(true);
-        }
+        // Update imageData state with the new rendered image
+        const imageDataUrl = canvasRef.current.toDataURL();
+        setImageData(imageDataUrl);
+
         setIsDirty(false);
       } catch (error) {
         console.error("Failed to render image:", error);
@@ -412,7 +661,6 @@ function App() {
         setError(true);
       }
     };
-
     requestAnimationFrame(renderImage);
   }, [
     isMounted,
@@ -425,22 +673,42 @@ function App() {
     loadImage,
     config,
     useMask,
+    selectedCustomExpression,
   ]);
+  const handleCopyImage = useCallback(() => {
+    if (imageData) {
+      navigator.clipboard
+        .writeText(imageData)
+        .then(() => {
+          alert(
+            "Image URL copied to clipboard! You can paste it in most applications."
+          );
+        })
+        .catch((err) => {
+          console.error("Failed to copy image URL:", err);
+          setErrorMessage(
+            "Failed to copy image URL. Please try again or use right-click to copy the image."
+          );
+          setError(true);
+        });
+    } else {
+      setErrorMessage("Image not ready. Please wait for it to render.");
+      setError(true);
+    }
+  }, [imageData]);
 
-  // Handle image download
   const handleDownload = useCallback(() => {
-    if (renderRef.current) {
+    if (imageData) {
       const link = document.createElement("a");
-      link.href = renderRef.current.src;
+      link.href = imageData;
       link.download = "character-dialogue.png";
       link.click();
     } else {
-      console.error("Render reference is not available");
+      console.error("Image data is not available");
       setErrorMessage("Failed to download image. Please try again.");
       setError(true);
     }
-  }, []);
-
+  }, [imageData]);
   // Memoize the expression buttons to prevent unnecessary re-renders
   const expressionButtons = useMemo(() => {
     if (!config) return null;
@@ -464,38 +732,34 @@ function App() {
           <Typography>{character.name}</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <ImageList cols={5} gap={8}>
+          <ResponsiveGrid>
             {character.expressions.map((expr) => (
-              <ImageListItem key={expr.name}>
-                <Tooltip title={expr.name}>
-                  <Box
-                    component="img"
-                    src={`/faces/${character.folder}/${expr.file}`}
-                    alt={expr.name}
-                    onClick={() => handleExpressionChange(expr.name)}
-                    sx={{
-                      width: "50px",
-                      height: "50px",
-                      border:
-                        expression === expr.name
-                          ? "2px solid"
-                          : "2px solid transparent",
-                      borderColor:
-                        expression === expr.name
-                          ? "primary.main"
-                          : "transparent",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                      "&:hover": {
-                        borderColor: "primary.light",
-                      },
-                      imageRendering: "pixelated",
-                    }}
-                  />
-                </Tooltip>
-              </ImageListItem>
+              <Tooltip key={expr.name} title={expr.name}>
+                <Box
+                  component="img"
+                  src={`/faces/${character.folder}/${expr.file}`}
+                  alt={expr.name}
+                  onClick={() => handleExpressionChange(expr.name)}
+                  sx={{
+                    width: "96px",
+                    height: "96px",
+                    border:
+                      expression === expr.name
+                        ? "2px solid"
+                        : "2px solid transparent",
+                    borderColor:
+                      expression === expr.name ? "primary.main" : "transparent",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    "&:hover": {
+                      borderColor: "primary.light",
+                    },
+                    imageRendering: "pixelated",
+                  }}
+                />
+              </Tooltip>
             ))}
-          </ImageList>
+          </ResponsiveGrid>
         </AccordionDetails>
       </Accordion>
     );
@@ -507,6 +771,71 @@ function App() {
     handleAccordionChange,
     handleExpressionChange,
   ]);
+  const customAccordion = useMemo(
+    () => (
+      <Accordion>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="custom-expression-content"
+          id="custom-expression-header"
+        >
+          <Box display="flex" alignItems="center">
+            <Typography variant="h6">Custom</Typography>
+            <Tooltip title="Upload and use custom expressions">
+              <HelpOutlineIcon sx={{ ml: 1 }} />
+            </Tooltip>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box mb={2}>
+            <input
+              accept="image/*"
+              style={{ display: "none" }}
+              id="custom-expression-upload"
+              type="file"
+              onChange={handleCustomExpressionUpload}
+            />
+            <label htmlFor="custom-expression-upload">
+              <Button
+                variant="contained"
+                component="span"
+                startIcon={<UploadIcon />}
+              >
+                Upload Image
+              </Button>
+            </label>
+          </Box>
+          <ResponsiveGrid>
+            {customExpressions.map((customExpr) => (
+              <Tooltip key={customExpr.id} title={customExpr.name}>
+                <CustomExpressionImage
+                  src={customExpr.data}
+                  alt={customExpr.name}
+                  onClick={() => handleCustomExpressionSelect(customExpr)}
+                  sx={{
+                    border:
+                      selectedCustomExpression === customExpr
+                        ? "2px solid"
+                        : "2px solid transparent",
+                    borderColor:
+                      selectedCustomExpression === customExpr
+                        ? "primary.main"
+                        : "transparent",
+                  }}
+                />
+              </Tooltip>
+            ))}
+          </ResponsiveGrid>
+        </AccordionDetails>
+      </Accordion>
+    ),
+    [
+      customExpressions,
+      selectedCustomExpression,
+      handleCustomExpressionUpload,
+      handleCustomExpressionSelect,
+    ]
+  );
 
   if (isLoading) {
     return <CircularProgress />;
@@ -526,30 +855,47 @@ function App() {
             width="608"
             height="128"
             style={{
+              display: "none",
               imageRendering: "pixelated",
-              border: "1px solid #000", // Add a border to make sure the canvas is visible
+              border: "1px solid #000",
             }}
-          ></canvas>
+          />
+          {imageData && (
+            <Box>
+              <img
+                src={imageData}
+                alt="Rendered output"
+                style={{
+                  imageRendering: "pixelated",
+                  border: "1px solid #000",
+                }}
+              />
+            </Box>
+          )}
         </Box>
-        <RenderedImage
-          ref={renderRef}
-          alt="Rendered output"
-          style={{ display: "none" }} // Hide this image as we're using it for download only
-        />
-        <DownloadButton
+        <Button
+          color="primary"
+          startIcon={<ContentCopyIcon />}
+          onClick={handleCopyImage}
+          sx={{ mt: 2, mr: 2 }}
+        >
+          Copy Image
+        </Button>
+        <Button
           variant="contained"
           color="primary"
           startIcon={<DownloadIcon />}
           onClick={handleDownload}
+          sx={{ mt: 2 }}
         >
           Download Image
-        </DownloadButton>
+        </Button>
 
         {/* Main Content */}
         <ContentContainer>
           <InterfaceBox>
             <Box mb={2}>
-              <Typography variant="h6" component="label" htmlFor="message">
+              <Typography variant="h5" component="label" htmlFor="message">
                 Message
               </Typography>
               <TextField
@@ -570,43 +916,13 @@ function App() {
 
             {/* Character Selection */}
             <Box mt={2}>
-              <FormControl fullWidth>
-                <InputLabel id="character-select-label">Character</InputLabel>
-                <Select
-                  labelId="character-select-label"
-                  id="character-select"
-                  value={selectedCharacter}
-                  label="Character"
-                  onChange={handleCharacterChange}
-                >
-                  {config.characters.map((char) => (
-                    <MenuItem key={char.name} value={char.name}>
-                      {char.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Typography variant="h5">Characters</Typography>
+              {characterAccordions}
             </Box>
-
+            <Box mt={2}>{customAccordion}</Box>
+            {!selectedCustomExpression}
             {/* Background Selection */}
-            <Box mt={2}>
-              <FormControl fullWidth>
-                <InputLabel id="background-select-label">Background</InputLabel>
-                <Select
-                  labelId="background-select-label"
-                  id="background-select"
-                  value={selectedBackground}
-                  label="Background"
-                  onChange={handleBackgroundChange}
-                >
-                  {config.backgrounds.map((bg) => (
-                    <MenuItem key={bg.name} value={bg.name}>
-                      {bg.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
+            {backgroundSelection}
 
             {/* Mask Toggle */}
             <Box mt={2}>
@@ -623,10 +939,6 @@ function App() {
             </Box>
 
             {/* Expression Selection */}
-            <Box mt={4}>
-              <Typography variant="h6">Expression</Typography>
-              {expressionButtons}
-            </Box>
           </InterfaceBox>
         </ContentContainer>
       </OutputBox>

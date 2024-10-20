@@ -56,7 +56,59 @@
         { "name": "X3", "file": "x3.png" },
         { "name": "Xwx", "file": "xwx.png" },
         { "name": "Uwu", "file": "uwu.png" },
-        { "name": "Yawn", "file": "yawn.png" }
+        { "name": "Yawn", "file": "yawn.png" },
+        { "name": "Angry", "file": "angry.png" },
+        { "name": "Ayy", "file": "ayy.png" },
+        { "name": "Bewildered", "file": "bewildered.png" },
+        { "name": "Bork", "file": "bork.png" },
+        { "name": "Bork 2", "file": "bork2.png" },
+        { "name": "Dark", "file": "dark.png" },
+        { "name": "Disappoint", "file": "disappoint.png" },
+        { "name": "Disapprove", "file": "disapprove.png" },
+        { "name": "Elegant", "file": "elegant.png" },
+        { "name": "Embarrassed", "file": "embarrassed.png" },
+        { "name": "Empty", "file": "empty.png" },
+        { "name": "Empty 2", "file": "empty2.png" },
+        { "name": "Empty Huh", "file": "empty_huh.png" },
+        { "name": "Empty Speak", "file": "empty_speak.png" },
+        { "name": "Empty Upset", "file": "empty_upset.png" },
+        { "name": "Empty Upset 2", "file": "empty_upset2.png" },
+        { "name": "Empty Upset 3", "file": "empty_upset3.png" },
+        { "name": "Error", "file": "error.png" },
+        { "name": "Eyes Wide", "file": "eyeswide.png" },
+        { "name": "Happy", "file": "happy.png" },
+        { "name": "Happy 2", "file": "happy2.png" },
+        { "name": "Hatless", "file": "hatless.png" },
+        { "name": "Heads Up", "file": "headsup.png" },
+        { "name": "Heads Up 2", "file": "headsup2.png" },
+        { "name": "Huh 2", "file": "huh2.png" },
+        { "name": "Huh 3", "file": "huh3.png" },
+        { "name": "Nom", "file": "nom.png" },
+        { "name": "Nom Cry", "file": "nom_cry.png" },
+        { "name": "Oho", "file": "oho.png" },
+        { "name": "Sadcat", "file": "sadcat.png" },
+        { "name": "Shock 2", "file": "shock2.png" },
+        { "name": "Shock 3", "file": "shock3.png" },
+        { "name": "Sigh", "file": "sigh.png" },
+        { "name": "Smug", "file": "smug.png" },
+        { "name": "Stronk", "file": "stronk.png" },
+        { "name": "Stronk Cry", "file": "stronk_cry.png" },
+        { "name": "Stronk Smile", "file": "stronk_smile.png" },
+        { "name": "Stronk Smug", "file": "stronk_smug.png" },
+        { "name": "Suspicious", "file": "suspicious.png" },
+        { "name": "Teary", "file": "teary.png" },
+        { "name": "Upset", "file": "upset.png" },
+        { "name": "Wail", "file": "wail.png" },
+        { "name": "What", "file": "what.png" },
+        { "name": "What 2", "file": "what2.png" },
+        { "name": "Worry", "file": "worry.png" },
+        { "name": "Worry 2", "file": "worry2.png" },
+        { "name": "Wow", "file": "wow.png" },
+        { "name": "Worried", "file": "worried.png" },
+        { "name": "Worried 2", "file": "worried2.png" },
+        { "name": "Worried Cry", "file": "worried_cry.png" },
+        { "name": "Yell", "file": "yell.png" },
+        { "name": "Trans Rights", "file": "trans.png" }
       ]
     },
     {
@@ -97,7 +149,20 @@
     {
       "name": "Niki",
       "folder": "niki",
-      "expressions": []
+      "expressions": [{ "name": "Neutral", "file": "neutral.png" }]
+    },
+    {
+      "name": "Rue",
+      "folder": "rue",
+      "expressions": [
+        { "name": "Sad", "file": "sad.png" },
+        { "name": "Sigh", "file": "sigh.png" },
+        { "name": "Smile", "file": "smile.png" },
+        { "name": "Talking", "file": "talk.png" },
+        { "name": "Normal", "file": "rue.png" },
+        { "name": "Dark", "file": "dark.png" },
+        { "name": "Surprised", "file": "oh.png" }
+      ]
     },
     {
       "name": "The World Machine",
@@ -134,6 +199,17 @@
         { "name": "Gasmask", "file": "gasmask.png" },
         { "name": "Huh", "file": "huh.png" },
         { "name": "Shock", "file": "shock.png" }
+      ]
+    },
+    {
+      "name": "Siffrin",
+      "folder": "siffrin",
+      "expressions": [
+        { "name": "Angry 1", "file": "Angry1.png" },
+        { "name": "Angry 4", "file": "Angry4.png" },
+        { "name": "Closed Eyes", "file": "closed_eyes.gif" },
+        { "name": "Sad 2", "file": "Sad_2.webp" },
+        { "name": "Happy 1", "file": "Happy1.webp" }
       ]
     }
   ],
