@@ -104,11 +104,6 @@ const TextEditor = () => {
 
   return (
     <>
-      <Head>
-        <title>{fileName} - Text Editor</title>
-        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-      </Head>
-      <CssBaseline />
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>

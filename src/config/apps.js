@@ -54,4 +54,26 @@ export const apps = [
       height: 500,
     },
   },
+  {
+    id: "sandgame",
+    label: "JSandBox",
+    icon: "/gallery.png",
+    filename: "SandGame",
+    componentProps: {},
+    windowProps: {
+      width: 800,
+      height: 500,
+    },
+  },
+  {
+    id: "jukebox",
+    label: "Jukebox",
+    icon: "/music.png",
+    filename: "MusicPlayer",
+    componentProps: {},
+    windowProps: {
+      width: 800,
+      height: 500,
+    },
+  },
 ];

@@ -11,7 +11,7 @@ export default function Document() {
           type="font/ttf"
           crossOrigin="anonymous"
         />
-        <title>Falseshot</title>
+        
         <meta
           property="description"
           content="Nyko isn't worth saving anymore..."

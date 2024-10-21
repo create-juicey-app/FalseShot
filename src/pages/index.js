@@ -14,9 +14,9 @@ const Home = () => {
 
   const [primaryColor, setPrimaryColor] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("primaryColor") || "#8855ff";
+      return localStorage.getItem("primaryColor") || "#6442a5";
     }
-    return "#8855ff";
+    return "#6442a5";
   });
 
   useEffect(() => {
@@ -39,6 +39,7 @@ const Home = () => {
 
   return (
     <ThemeProvider theme={customTheme}>
+      <title>Falseshot V0.6</title>
       <CssBaseline />
       <BootSequence>
         <Desktop

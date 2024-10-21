@@ -15,7 +15,8 @@
 
 # production
 /build
-
+/public/GAMETEST
+/public/GAMETEST/*
 # misc
 .DS_Store
 *.pem

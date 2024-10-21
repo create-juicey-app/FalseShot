@@ -65,6 +65,34 @@ export const createCustomTheme = (mode, primaryColor) =>
           disableRipple: true,
         },
       },
+      MuiSlider: {
+        styleOverrides: {
+          thumb: {
+            backgroundImage: `url('/knob.png')`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            width: 24,
+            height: 24,
+            backgroundColor: "transparent",
+            border: "none",
+            boxShadow: "none",
+            "&::before": {
+              display: "none",
+            },
+            filter:
+              "invert(40%) sepia(100%) saturate(7500%) hue-rotate(265deg) brightness(100%) contrast(100%)",
+          },
+          rail: {
+            backgroundColor: "transparent",
+            border: `2px solid ${primaryColor}`,
+            borderRadius: 0,
+          },
+          track: {
+            backgroundColor: primaryColor,
+            borderRadius: 0,
+          },
+        },
+      },
     },
     shape: {
       borderRadius: 0,
