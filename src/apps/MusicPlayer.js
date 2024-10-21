@@ -21,7 +21,7 @@ const tracks = [
   },
   {
     title: "FEMTANYL - M3 N MIN3",
-    bpm: 150,
+    bpm: 300,
     filename: "M3NMIN3.mp3",
     defaultSpeed: 100,
   },

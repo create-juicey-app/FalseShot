@@ -135,18 +135,3 @@ body {
 .cursor-not-allowed {
   cursor: url("/cursors/C11.png"), not-allowed;
 }
-
-* {
-  cursor: url("/cursors/C1.png"), auto;
-  cursor: url("/cursors/C1.png"), default;
-  cursor: url("/cursors/C2.png"), pointer;
-  cursor: url("/cursors/C4.png"), grab;
-  cursor: url("/cursors/C5.png"), grabbing;
-  cursor: url("/cursors/C6.png"), ew-resize;
-  cursor: url("/cursors/C7.png"), ns-resize;
-  cursor: url("/cursors/C8.png"), nwse-resize;
-  cursor: url("/cursors/C9.png"), nesw-resize;
-  cursor: url("/cursors/C10.png"), move;
-  cursor: url("/cursors/C11.png"), not-allowed;
-  cursor: url("/cursors/C1.png"), default;
-}
