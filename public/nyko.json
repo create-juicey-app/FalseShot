@@ -217,6 +217,7 @@
     { "name": "Oneshot", "file": "nikobg.png", "useMask": false },
     { "name": "Falseshot", "file": "nykobg.png", "useMask": true },
     { "name": "World Machine", "file": "wmbg.png", "useMask": false },
+    { "name": "Niki's void", "file": "niki.png", "useMask": false },
     { "name": "In Stars And Time", "file": "satbg.png", "useMask": false }
   ]
 }

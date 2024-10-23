@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, Slider, Typography } from "@mui/material";
+import { IconButton } from "@mui/material";
+import { Dialog, DialogContent, DialogTitle } from "@mui/material";
+import { Card, CardContent, CardMedia } from "@mui/material";
+import {
+  ThumbUp as ThumbUpIcon,
+  ThumbDown as ThumbDownIcon,
+} from "@mui/icons-material";
+import {
+  Shuffle as ShuffleIcon,
+  Repeat as RepeatIcon,
+  QueueMusic as QueueMusicIcon,
+} from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
+import Paper from "@mui/material/Paper";
 
 const GRAMOPHONE_FRAMES = [1, 2, 3, 4, 5, 4, 3, 2];
 const NIKO_JAM_FRAMES = [0, 1, 2, 3];
@@ -133,8 +147,34 @@ export default function MusicPlayer() {
   const [nikoFrameIndex, setNikoFrameIndex] = useState(0);
   const [nikoState, setNikoState] = useState("stand");
   const [sleepTimer, setSleepTimer] = useState(null);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
+  const [isRepeat, setIsRepeat] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [ratings, setRatings] = useState({});
+  const [nextTracks, setNextTracks] = useState([]);
+  const [playlists, setPlaylists] = useState([
+    {
+      id: "playlist1",
+      name: "Femtanyl Pack",
+      description: "Here are all the tracks of the indie artist FEMTANYL",
+      thumbnail: "/playlists/hyperpop.png",
+      tracks: tracks.filter((track) => track.title.includes("FEMTANYL")),
+      source: "FEMTANYL",
+    },
+    {
+      id: "playlist2",
+      name: "Chill Gaming",
+      description: "Relaxing game soundtracks",
+      thumbnail: "/playlists/gaming.jpg",
+      tracks: tracks.filter(
+        (track) => track.title.includes("OST") || track.title.includes("TIME")
+      ),
+      source: "Various Games",
+    },
+  ]);
   const audioRef = useRef(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState(playlists[0]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -191,6 +231,10 @@ export default function MusicPlayer() {
   }, [isPlaying, sleepTimer]);
 
   useEffect(() => {
+    fetchRatings();
+  }, []);
+
+  useEffect(() => {
     if (audioRef.current) {
       audioRef.current.src = `/songs/${tracks[currentTrack].filename}`;
       setPlaybackSpeed(tracks[currentTrack].defaultSpeed);
@@ -200,6 +244,16 @@ export default function MusicPlayer() {
     }
   }, [currentTrack, isPlaying]);
 
+  useEffect(() => {
+    if (isShuffle) {
+      const shuffledTracks = [...currentPlaylist.tracks]
+        .filter((_, i) => i !== currentTrack)
+        .sort(() => Math.random() - 0.5);
+      setNextTracks(shuffledTracks);
+    } else {
+      setNextTracks(currentPlaylist.tracks.slice(currentTrack + 1));
+    }
+  }, [currentTrack, isShuffle, currentPlaylist]);
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
     if (audioRef.current) {
@@ -210,7 +264,183 @@ export default function MusicPlayer() {
       }
     }
   };
+  const fetchRatings = async () => {
+    try {
+      const response = await fetch("/api/ratings");
+      const data = await response.json();
+      setRatings(data);
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+    }
+  };
+  const handleRate = async (playlistId, rating) => {
+    try {
+      const response = await fetch("/api/ratings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playlistId, rating }),
+      });
+      const data = await response.json();
+      setRatings(data);
+    } catch (error) {
+      console.error("Error rating playlist:", error);
+    }
+  };
 
+  const PlaylistOverlay = ({ open, onClose }) => {
+    const calculateAverageBpm = (tracks) => {
+      return Math.round(
+        tracks.reduce((acc, track) => acc + track.bpm, 0) / tracks.length
+      );
+    };
+
+    if (!open) return null;
+
+    return (
+      <Box
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+        }}
+      >
+        {/* Backdrop with blur */}
+        <Box
+          onClick={onClose}
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(8px)",
+            zIndex: 9999,
+          }}
+        />
+
+        {/* Paper content */}
+        <Paper
+          elevation={24}
+          sx={{
+            position: "relative",
+            width: "90%",
+            maxWidth: "1200px",
+            maxHeight: "90vh",
+            overflowY: "auto",
+            m: 2,
+            zIndex: 10000,
+            boxShadow: "0 0 40px rgba(0, 0, 0, 0.5)",
+          }}
+        >
+          <Box sx={{ p: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+                Select Playlist
+              </Typography>
+              <IconButton
+                onClick={onClose}
+                sx={{
+                  transition: "transform 0.2s",
+                  "&:hover": {
+                    transform: "rotate(90deg)",
+                  },
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
+
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  md: "repeat(2, 1fr)",
+                  lg: "repeat(3, 1fr)",
+                },
+                gap: 2,
+              }}
+            >
+              {playlists.map((playlist) => (
+                <Card
+                  key={playlist.id}
+                  sx={{
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setCurrentPlaylist(playlist);
+                    setCurrentTrack(0);
+                    onClose();
+                  }}
+                >
+                  <CardMedia
+                    component="img"
+                    image={playlist.thumbnail}
+                    alt={playlist.name}
+                    sx={{ height: 140, objectFit: "cover" }}
+                  />
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                      {playlist.name}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
+                      {playlist.description}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      Average BPM: {calculateAverageBpm(playlist.tracks)}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      Source: {playlist.source}
+                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRate(playlist.id, "up");
+                        }}
+                      >
+                        <ThumbUpIcon />
+                      </IconButton>
+                      <Typography>{ratings[playlist.id]?.up || 0}</Typography>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRate(playlist.id, "down");
+                        }}
+                      >
+                        <ThumbDownIcon />
+                      </IconButton>
+                      <Typography>{ratings[playlist.id]?.down || 0}</Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
+    );
+  };
   const handleVolumeChange = (event, newValue) => {
     setVolume(newValue);
     if (audioRef.current) {
@@ -231,7 +461,15 @@ export default function MusicPlayer() {
   };
 
   const handleNextTrack = () => {
-    setCurrentTrack((prev) => (prev + 1) % tracks.length);
+    if (currentTrack === currentPlaylist.tracks.length - 1) {
+      if (isRepeat) {
+        setCurrentTrack(0);
+      } else {
+        setIsPlaying(false);
+      }
+    } else {
+      setCurrentTrack((prev) => prev + 1);
+    }
   };
 
   return (
@@ -244,27 +482,61 @@ export default function MusicPlayer() {
         p: 2,
       }}
     >
+      <Typography variant="h5" sx={{ mb: 2, color: "red" }}>
+        !!!WARNING!!! THIS APP IS IN A VERY VERY INSABLE STATE, HERE BE DRAGONS
+        AND BUGS.
+      </Typography>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Next in Queue:
+        </Typography>
+        <Box sx={{ maxHeight: "100px", overflow: "auto" }}>
+          {nextTracks.slice(0, 3).map((track, index) => (
+            <Typography
+              key={index}
+              variant="body2"
+              sx={{ color: "text.secondary" }}
+            >
+              {index + 1}. {track.title}
+            </Typography>
+          ))}
+        </Box>
+      </Box>
       <Box
         sx={{
           position: "relative",
           width: "100%",
-          height: 150,
+          height: 200,
           mb: 2,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
         }}
       >
-        <img
-          src="/jukebox/small_sun.png"
-          alt="Small Sun"
-          style={{
-            width: "40px",
-            height: "40px",
-            objectFit: "contain",
-            imageRendering: "pixelated",
+        <Box
+          sx={{
+            position: "relative",
+            width: "80px",
+            height: "80px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
           }}
-        />
+        >
+          <img
+            src="/jukebox/small_sun.png"
+            alt="Small Sun"
+            style={{
+              top: 26,
+              width: "60px",
+              height: "60px",
+              objectFit: "contain",
+              imageRendering: "pixelated",
+              position: "relative",
+              zIndex: 1,
+            }}
+          />
+        </Box>
         <img
           src={`/jukebox/grammaphone${GRAMOPHONE_FRAMES[gramophoneFrameIndex]}.png`}
           alt="Gramophone"
@@ -275,7 +547,7 @@ export default function MusicPlayer() {
             imageRendering: "pixelated",
           }}
         />
-        <Box sx={{ width: "80px", height: "80px" }}>
+        <Box sx={{ width: "120px", height: "120px" }}>
           <SpritesheetImage
             src={`/jukebox/niko_${nikoState}.png`}
             frameIndex={
@@ -288,8 +560,8 @@ export default function MusicPlayer() {
             totalFrames={
               nikoState === "jam" ? 4 : nikoState === "stand" ? 7 : 2
             }
-            width={80}
-            height={80}
+            width={120}
+            height={120}
           />
         </Box>
       </Box>
@@ -398,7 +670,28 @@ export default function MusicPlayer() {
           size={32}
         />
       </Box>
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2 }}>
+        <IconButton
+          onClick={() => setIsShuffle(!isShuffle)}
+          sx={{ color: isShuffle ? "primary.main" : "inherit" }}
+        >
+          <ShuffleIcon />
+        </IconButton>
+        <IconButton
+          onClick={() => setIsRepeat(!isRepeat)}
+          sx={{ color: isRepeat ? "primary.main" : "inherit" }}
+        >
+          <RepeatIcon />
+        </IconButton>
+        <IconButton onClick={() => setShowPlaylistModal(true)}>
+          <QueueMusicIcon />
+        </IconButton>
+      </Box>
 
+      <PlaylistOverlay
+        open={showPlaylistModal}
+        onClose={() => setShowPlaylistModal(false)}
+      />
       <audio
         ref={audioRef}
         src={`/songs/${tracks[currentTrack].filename}`}
