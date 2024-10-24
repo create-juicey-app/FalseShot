@@ -9,7 +9,7 @@ export default function Custom404() {
         alignItems: "center",
       }}
     >
-      <video width="100%" height="auto" loop>
+      <video width="100%" height="auto" loop controls>
         <source src="/nikostrikes.mp4" type="video/mp4" />
         404: Video not found
       </video>
