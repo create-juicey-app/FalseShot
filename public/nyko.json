@@ -108,7 +108,9 @@
         { "name": "Worried 2", "file": "worried2.png" },
         { "name": "Worried Cry", "file": "worried_cry.png" },
         { "name": "Yell", "file": "yell.png" },
-        { "name": "Trans Rights", "file": "trans.png" }
+        { "name": "Trans Rights", "file": "trans.png" },
+        { "name": "Smoking niko", "file": "Smokinontehzaza.png" },
+        { "name": "...", "file": "boi.png" }
       ]
     },
     {
