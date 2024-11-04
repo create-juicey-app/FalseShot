@@ -128,7 +128,8 @@
         { "name": "Biting lip", "file": "Lipbit.png" },
         { "name": "Goober", "file": "Goob.png" },
         { "name": "Mad", "file": "Angy.png" },
-        { "name": "Confused", "file": "Confusion.png" }
+        { "name": "Confused", "file": "Confusion.png" },
+        { "name": "Death", "file": "boi.png" }
       ]
     },
     {

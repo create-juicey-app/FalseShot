@@ -1,0 +1,67 @@
+[
+  {
+    "name": "__Secure-3PSID",
+    "value": "g.a000pQhRfMmi4wrZ9VjujKSqhzdcr-34Rq1HZU6u3nBsjtQBhDMCOL5G2W3Az1oKSW00VXbXxQACgYKAXQSARYSFQHGX2Mi92H6DgOq5-qgxvvIG3S33hoVAUF8yKogyPKaZprEEhDSzoD73bI80076",
+    "domain": ".youtube.com",
+    "hostOnly": false,
+    "path": "/",
+    "secure": true,
+    "httpOnly": true,
+    "sameSite": "no_restriction",
+    "session": false,
+    "firstPartyDomain": "",
+    "partitionKey": null,
+    "expirationDate": 1792356797,
+    "storeId": "firefox-default",
+    "id": 1
+  },
+
+  {
+    "name": "LOGIN_INFO",
+    "value": "AFmmF2swRQIgeddgywfEEPLzkFt-xihLydicFqGvOJMQOlT5adsHOTMCIQCPVCg7sYnuJ_AajNkwMenX8Y9E2VYi0l4cVUJCjJTnqQ:QUQ3MjNmeUg5TkZMdzY0YXdZVUdoeEN3TGRKbmZNR25VaFRqUkdNLXY1eDk1MnpMOWhqLXRvNWdsRnpoaks2WjV1VnNrdXhRZWwyRENJd3pUYVpFODNBQXBxdXBuZkdDNEl0RzkwQ29kd21xcFpHbWgwenptbVA0TnJRMU5tQW5tLVp2OXJibkdjVHh3c2hQbDNOTTg2eEdiRXVIaURZWmtn",
+    "domain": ".youtube.com",
+    "hostOnly": false,
+    "path": "/",
+    "secure": true,
+    "httpOnly": true,
+    "sameSite": "no_restriction",
+    "session": false,
+    "firstPartyDomain": "",
+    "partitionKey": null,
+    "expirationDate": 1791241028,
+    "storeId": "firefox-default",
+    "id": 2
+  },
+  {
+    "name": "SID",
+    "value": "g.a000pQhRfMmi4wrZ9VjujKSqhzdcr-34Rq1HZU6u3nBsjtQBhDMCN2Xb_kdR4seHNLYhAkl5FgACgYKAQ0SARYSFQHGX2Mibjyn1AT8fihASQMTvS_QcBoVAUF8yKpsY46aX_gq401ShlOBt3sm0076",
+    "domain": ".youtube.com",
+    "hostOnly": false,
+    "path": "/",
+    "secure": false,
+    "httpOnly": false,
+    "sameSite": "no_restriction",
+    "session": false,
+    "firstPartyDomain": "",
+    "partitionKey": null,
+    "expirationDate": 1792356797,
+    "storeId": "firefox-default",
+    "id": 3
+  },
+  {
+    "name": "VISITOR_INFO1_LIVE",
+    "value": "aJfDd_TnD74",
+    "domain": ".youtube.com",
+    "hostOnly": false,
+    "path": "/",
+    "secure": true,
+    "httpOnly": true,
+    "sameSite": "no_restriction",
+    "session": false,
+    "firstPartyDomain": "",
+    "partitionKey": null,
+    "expirationDate": 1743777707,
+    "storeId": "firefox-default",
+    "id": 4
+  }
+]

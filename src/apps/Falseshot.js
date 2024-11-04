@@ -4,7 +4,7 @@ import Image from "next/image";
 
 const ForbiddenPage = () => {
   const [text, setText] = useState("");
-  const fullText = "You have no access to the content of this page";
+  const fullText = "We are sorry, but you are not allowed to access this app.";
   const [index, setIndex] = useState(0);
 
   useEffect(() => {

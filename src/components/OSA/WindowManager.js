@@ -9,8 +9,8 @@ import React, {
 } from "react";
 import { CircularProgress, Button } from "@mui/material";
 import Window from "./Window";
-import Modal from "./Modal";
-import ErrorBoundary from "./ErrorBoundary"; // Ensure this component exists
+import Modal from "../Modal";
+import ErrorBoundary from "../ErrorBoundary"; // Ensure this component exists
 
 const WindowManager = forwardRef((props, ref) => {
   const { apps } = props; // Extract apps from props
@@ -75,7 +75,7 @@ const WindowManager = forwardRef((props, ref) => {
       } else if (app.filename) {
         // Dynamically import based on filename
         Component = lazy(() =>
-          import(`../apps/${app.filename}`)
+          import(`../../apps/${app.filename}`)
             .then((module) => ({ default: module.default }))
             .catch((error) => {
               handleError(error, windowId);

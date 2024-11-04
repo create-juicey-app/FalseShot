@@ -66,4 +66,15 @@ export const apps = [
       height: 500,
     },
   },
+  {
+    id: "viddownload",
+    label: "Video Downloader",
+    icon: "/gallery.png",
+    filename: "VideoDownloader",
+    componentProps: {},
+    windowProps: {
+      width: 800,
+      height: 500,
+    },
+  },
 ];

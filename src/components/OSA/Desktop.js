@@ -10,7 +10,7 @@ import WindowManager from "./WindowManager";
 import Taskbar from "./Taskbar";
 import StartMenu from "./StartMenu";
 import SettingsDrawer from "./SettingsDrawer";
-import { apps } from "../config/apps";
+import { apps } from "../../config/apps";
 
 const Desktop = ({
   themeMode,

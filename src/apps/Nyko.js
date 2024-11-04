@@ -52,6 +52,7 @@ const InterfaceBox = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   overflowY: "auto",
   scale: "90%",
+  marginTop: "-80px",
 }));
 
 const OutputBox = styled(Box)(({ theme }) => ({
@@ -59,15 +60,6 @@ const OutputBox = styled(Box)(({ theme }) => ({
   textAlign: "center",
 }));
 
-const RenderedImage = styled("img")(({ theme }) => ({
-  border: `1px solid ${theme.palette.divider}`,
-  cursor: "pointer",
-  imageRendering: "pixelated",
-}));
-
-const DownloadButton = styled(Button)(({ theme }) => ({
-  marginTop: theme.spacing(2),
-}));
 const CustomExpressionImage = styled("img")(({ theme }) => ({
   width: "96px",
   height: "96px",

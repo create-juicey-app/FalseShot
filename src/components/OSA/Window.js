@@ -1,4 +1,5 @@
-import React, { useState, useEffect, Suspense, lazy } from "react";
+// Filename: components/OSB/Window.js
+import React, { useState, useEffect, Suspense } from "react";
 import {
   Paper,
   Typography,
@@ -33,6 +34,7 @@ const Window = ({
   height,
   x,
   y,
+  zIndex, // Added zIndex prop
 }) => {
   const minWidth = 200;
   const minHeight = 150;
@@ -107,8 +109,9 @@ const Window = ({
 
   return (
     <Rnd
-      size={windowSize}
       position={position}
+      size={windowSize}
+      onDragStart={focusWindow}
       onDragStop={(e, d) => {
         setPosition({ x: d.x, y: d.y });
       }}
@@ -124,7 +127,8 @@ const Window = ({
       disableDragging={isMaximized}
       enableResizing={!isMaximized}
       dragHandleClassName="window-handle"
-      bounds="window"
+      bounds="window" // Changed from "parent" to "window"
+      style={{ zIndex }} // Apply zIndex to Rnd component
     >
       <Paper
         elevation={3}
@@ -148,7 +152,11 @@ const Window = ({
         <AppBar
           position="static"
           color="primary"
-          sx={{ cursor: isMaximized ? "default" : "move", borderRadius: 0 }}
+          sx={{
+            cursor: isMaximized ? "default" : "move",
+            borderRadius: 0,
+            userSelect: "none",
+          }}
         >
           <Toolbar
             disableGutters={true}

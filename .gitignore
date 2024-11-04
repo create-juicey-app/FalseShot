@@ -20,7 +20,10 @@
 # misc
 .DS_Store
 *.pem
-
+# Sensitive data
+cookies.json
+**/cookies.json
+/config/cookies.json
 # debug
 npm-debug.log*
 yarn-debug.log*

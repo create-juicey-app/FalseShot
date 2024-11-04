@@ -1,0 +1,12 @@
+{
+  "error": "ReferenceError: Desktop is not defined",
+  "stackTrace": "\nHome@webpack-internal:///./src/pages/index.js:19:88\nErrorBoundary@webpack-internal:///./src/pages/_app.js:51:9\nMyApp@webpack-internal:///./src/pages/_app.js:59:1\nPathnameContextProviderAdapter@webpack-internal:///./node_modules/next/dist/shared/lib/router/adapters.js:81:42\nErrorBoundary@webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/ErrorBoundary.js:41:9\nReactDevOverlay@webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/ReactDevOverlay.js:33:55\nContainer@webpack-internal:///./node_modules/next/dist/client/index.js:81:1\nAppContainer@webpack-internal:///./node_modules/next/dist/client/index.js:189:24\nRoot@webpack-internal:///./node_modules/next/dist/client/index.js:413:35",
+  "hexDump": [
+    "a4 9a 98 fd a4 1b d6 66 80 c1 81 2d 11 e6 c8 af",
+    "16 d4 6c b1 b0 c0 e3 eb f3 dd fe f5 c0 8d bf 65",
+    "e4 14 01 25 e1 38 c5 da bf 05 f3 7f da 9f 93 ea",
+    "93 fb d8 fd 19 6e 3e f1 32 25 25 a6 12 d5 a3 87",
+    "a1 79 5e 56 35 b3 f8 0a 25 ab 41 53 c9 7b 93 9c"
+  ],
+  "timestamp": "2024-10-24T16:00:30.771Z"
+}

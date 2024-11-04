@@ -1,54 +1,87 @@
 import React, { useState, useEffect } from "react";
-import { ThemeProvider, CssBaseline } from "@mui/material";
-import Desktop from "../components/Desktop";
+import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { createCustomTheme } from "../config/theme";
-import BootSequence from "../components/BootSequence";
+import OSSelectionLanding from "../components/DualBoot";
 
 const Home = () => {
-  const [themeMode, setThemeMode] = useState(() => {
+  // Theme state for OSA
+  const [themeModeA, setThemeModeA] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("themeMode") || "dark";
+      return localStorage.getItem("themeModeA") || "dark";
     }
     return "dark";
   });
 
-  const [primaryColor, setPrimaryColor] = useState(() => {
+  const [primaryColorA, setPrimaryColorA] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("primaryColor") || "#6442a5";
+      return localStorage.getItem("primaryColorA") || "#6442a5";
     }
     return "#6442a5";
   });
 
+  // Theme state for OSB
+  const [themeModeB, setThemeModeB] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("themeModeB") || "light";
+    }
+    return "light";
+  });
+
+  const [primaryColorB, setPrimaryColorB] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("primaryColorB") || "#2196f3";
+    }
+    return "#2196f3";
+  });
+
+  // Persist theme settings
   useEffect(() => {
-    localStorage.setItem("themeMode", themeMode);
-  }, [themeMode]);
+    localStorage.setItem("themeModeA", themeModeA);
+    localStorage.setItem("primaryColorA", primaryColorA);
+    localStorage.setItem("themeModeB", themeModeB);
+    localStorage.setItem("primaryColorB", primaryColorB);
+  }, [themeModeA, primaryColorA, themeModeB, primaryColorB]);
 
-  useEffect(() => {
-    localStorage.setItem("primaryColor", primaryColor);
-  }, [primaryColor]);
+  // Create themes
+  const themeA = createCustomTheme(themeModeA, primaryColorA);
+  const themeB = createCustomTheme(themeModeB, primaryColorB);
 
-  const customTheme = createCustomTheme(themeMode, primaryColor);
-
-  const handleThemeModeChange = () => {
-    setThemeMode((prevMode) => (prevMode === "dark" ? "light" : "dark"));
+  // Theme handlers for OSA
+  const handleThemeModeChangeA = () => {
+    setThemeModeA((prevMode) => (prevMode === "dark" ? "light" : "dark"));
   };
 
-  const handlePrimaryColorChange = (event) => {
-    setPrimaryColor(event.target.value);
+  const handlePrimaryColorChangeA = (event) => {
+    setPrimaryColorA(event.target.value);
+  };
+
+  // Theme handlers for OSB
+  const handleThemeModeChangeB = () => {
+    setThemeModeB((prevMode) => (prevMode === "dark" ? "light" : "dark"));
+  };
+
+  const handlePrimaryColorChangeB = (event) => {
+    setPrimaryColorB(event.target.value);
   };
 
   return (
-    <ThemeProvider theme={customTheme}>
-      <title>Falseshot V0.6</title>
+    <ThemeProvider theme={themeA}>
       <CssBaseline />
-      <BootSequence>
-        <Desktop
-          themeMode={themeMode}
-          primaryColor={primaryColor}
-          onThemeModeChange={handleThemeModeChange}
-          onPrimaryColorChange={handlePrimaryColorChange}
+      <title>Falseshot V0.8</title>
+      <Box sx={{ height: "100vh", width: "100vw", zIndex: -50 }}>
+        <OSSelectionLanding
+          themeA={themeA}
+          themeB={themeB}
+          themeModeA={themeModeA}
+          primaryColorA={primaryColorA}
+          onThemeModeChangeA={handleThemeModeChangeA}
+          onPrimaryColorChangeA={handlePrimaryColorChangeA}
+          themeModeB={themeModeB}
+          primaryColorB={primaryColorB}
+          onThemeModeChangeB={handleThemeModeChangeB}
+          onPrimaryColorChangeB={handlePrimaryColorChangeB}
         />
-      </BootSequence>
+      </Box>
     </ThemeProvider>
   );
 };
