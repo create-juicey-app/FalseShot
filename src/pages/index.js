@@ -70,10 +70,8 @@ const Home = () => {
       <title>Falseshot V0.8</title>
       <h1>Falseshot V0.8</h1>
       <h3>403 ERROR</h3>
-      
     </ThemeProvider>
   );
 };
 
 export default Home;
-/
