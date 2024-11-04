@@ -34,9 +34,9 @@ const IconGrid = ({ onLaunchApp }) => {
     <Box
       sx={{
         position: "relative",
-        width: GRID_SIZE * 4,
-        height: GRID_SIZE * Math.ceil(apps.length / 4),
-        backgroundColor: "#282c34",
+        width: "100vw",
+        height: "100vh",
+        // backgroundColor: "#282c34",
         overflow: "hidden",
         padding: 2,
       }}
@@ -49,17 +49,28 @@ const IconGrid = ({ onLaunchApp }) => {
         return (
           <Rnd
             key={app.id}
-            default={{
-              x: position.x,
-              y: position.y,
-              width: 60,
-              height: 70,
-            }}
+            position={{ x: position.x, y: position.y }}
+            size={{ width: 60, height: 70 }}
             grid={[GRID_SIZE, GRID_SIZE]}
             bounds="parent"
             enableResizing={false}
             onDragStop={(e, data) => {
               updatePosition(app.id, data.x, data.y);
+            }}
+            style={{
+              border: "2px solid #61dafb",
+              borderRadius: "8px",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+              transition: "transform 0.2s",
+              zIndex: 1,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "scale(1.05)";
+              e.currentTarget.style.zIndex = 2;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.zIndex = 1;
             }}
           >
             <Box
@@ -70,13 +81,15 @@ const IconGrid = ({ onLaunchApp }) => {
                 flexDirection: "column",
                 alignItems: "center",
                 cursor: "pointer",
+                userSelect: "none",
               }}
               onDoubleClick={() => onLaunchApp(app)}
             >
               <img
                 src={app.icon}
                 alt={app.label}
-                style={{ width: 48, height: 48 }}
+                draggable={false}
+                style={{ width: 48, height: 48, pointerEvents: "none" }}
               />
               <Typography
                 variant="caption"
@@ -85,6 +98,7 @@ const IconGrid = ({ onLaunchApp }) => {
                   textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
                   textAlign: "center",
                   mt: 1,
+                  userSelect: "none",
                 }}
               >
                 {app.label}
