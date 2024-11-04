@@ -4,7 +4,7 @@ import { BackgroundPattern, PatternProvider } from "./BackgroundPattern";
 import Taskbar from "./Taskbar";
 import { useWindowManager } from "./contexts/WindowManagerContext";
 import WindowManager from "./WindowManager";
-import IconGrid from "./iconGrid";
+import IconGrid from "./IconGrid";
 import { Box } from "@mui/material";
 import dynamic from "next/dynamic";
 
