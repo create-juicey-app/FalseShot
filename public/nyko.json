@@ -274,5 +274,10 @@
     { "name": "World Machine", "file": "wmbg.png", "useMask": false },
     { "name": "Niki's void", "file": "nikibg.png", "useMask": false },
     { "name": "In Stars And Time", "file": "satbg.png", "useMask": false }
+  ],
+  "fonts": [
+    "Terminus",
+    "Arial",
+    "Courier New"
   ]
 }

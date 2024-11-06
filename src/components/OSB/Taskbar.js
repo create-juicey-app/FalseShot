@@ -5,10 +5,11 @@ import { Paper, IconButton, Button, Box } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AddIcon from "@mui/icons-material/Add";
-import { hexToRgb } from "./utils";
+import { hexToRgb } from "./utils/utils";
 import SettingsModal from "./SettingsModal";
 import { ThemeContext } from "./Theme";
 import { useWindowManager } from "./contexts/WindowManagerContext";
+import { Rnd } from "react-rnd";
 
 const Taskbar = () => {
   const { windows, activeWindow, focusWindow, openWindow } = useWindowManager();

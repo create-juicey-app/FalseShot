@@ -1,4 +1,4 @@
-import React, { useState, useContext, createContext, useMemo } from "react";
+import React, { useState, useContext, createContext, useMemo, useEffect } from "react";
 import { createTheme, ThemeProvider } from "@mui/material";
 import {
   Water,
@@ -26,7 +26,29 @@ export const ThemeContext = createContext({
   setAnimationSpeed: () => {},
   themes: {},
   getCurrentTheme: () => {},
+  scale: 1,
+  setScale: () => {},
 });
+
+// Add these utility functions at the top after imports
+const STORAGE_KEYS = {
+  THEME: 'osb-theme',
+  DARK_MODE: 'osb-dark-mode',
+  TASKBAR: 'osb-taskbar',
+  ANIMATION: 'osb-animation',
+  SCALE: 'osb-scale',
+};
+
+const loadSetting = (key, defaultValue) => {
+  if (typeof window === 'undefined') return defaultValue;
+  const saved = localStorage.getItem(key);
+  return saved ? JSON.parse(saved) : defaultValue;
+};
+
+const saveSetting = (key, value) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(key, JSON.stringify(value));
+};
 
 // Reduced, more focused color palette with carefully selected base colors
 export const baseThemes = {
@@ -136,14 +158,48 @@ function createDarkTheme(theme) {
 }
 
 export const ThemeProviderCustom = ({ children }) => {
-  const [currentTheme, setCurrentTheme] = useState("ocean");
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [taskbarSettings, setTaskbarSettings] = useState({
-    transparent: true,
-    width: 80,
-    height: 48,
-  });
-  const [animationSpeed, setAnimationSpeed] = useState("normal");
+  // Modify the state initializations to load from localStorage
+  const [currentTheme, setCurrentTheme] = useState(() => 
+    loadSetting(STORAGE_KEYS.THEME, "ocean")
+  );
+  const [isDarkMode, setIsDarkMode] = useState(() => 
+    loadSetting(STORAGE_KEYS.DARK_MODE, true)
+  );
+  const [taskbarSettings, setTaskbarSettings] = useState(() => 
+    loadSetting(STORAGE_KEYS.TASKBAR, {
+      transparent: true,
+      width: 80,
+      height: 48,
+    })
+  );
+  const [animationSpeed, setAnimationSpeed] = useState(() => 
+    loadSetting(STORAGE_KEYS.ANIMATION, "normal")
+  );
+  const [scale, setScale] = useState(() => 
+    loadSetting(STORAGE_KEYS.SCALE, 1)
+  );
+
+  // Add effect hooks to save settings when they change
+  useEffect(() => {
+    saveSetting(STORAGE_KEYS.THEME, currentTheme);
+  }, [currentTheme]);
+
+  useEffect(() => {
+    saveSetting(STORAGE_KEYS.DARK_MODE, isDarkMode);
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    saveSetting(STORAGE_KEYS.TASKBAR, taskbarSettings);
+  }, [taskbarSettings]);
+
+  useEffect(() => {
+    saveSetting(STORAGE_KEYS.ANIMATION, animationSpeed);
+  }, [animationSpeed]);
+
+  useEffect(() => {
+    saveSetting(STORAGE_KEYS.SCALE, scale);
+    document.documentElement.style.zoom = scale;
+  }, [scale]);
 
   const muiTheme = useMemo(() => {
     const activeTheme = baseThemes[currentTheme];
@@ -210,8 +266,10 @@ export const ThemeProviderCustom = ({ children }) => {
         const theme = baseThemes[currentTheme];
         return isDarkMode ? createDarkTheme(theme) : theme;
       },
+      scale,
+      setScale,
     }),
-    [currentTheme, isDarkMode, taskbarSettings, animationSpeed]
+    [currentTheme, isDarkMode, taskbarSettings, animationSpeed, scale]
   );
 
   return (

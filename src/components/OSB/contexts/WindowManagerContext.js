@@ -48,6 +48,8 @@ const windowReducer = (state, action) => {
           [action.payload.id]: {
             ...state.windows[action.payload.id],
             ...action.payload.updates,
+            // If isMaximized is true, ensure isMinimized is false
+            ...(action.payload.updates.isMaximized && { isMinimized: false }),
           },
         },
       };

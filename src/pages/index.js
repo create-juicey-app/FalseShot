@@ -68,8 +68,20 @@ const Home = () => {
     <ThemeProvider theme={themeA}>
       <CssBaseline />
       <title>Falseshot V0.8</title>
-      <h1>Falseshot V0.8</h1>
-      <h3>403 ERROR</h3>
+      <Box sx={{ height: "100vh", width: "100vw", zIndex: -50 }}>
+        <OSSelectionLanding
+          themeA={themeA}
+          themeB={themeB}
+          themeModeA={themeModeA}
+          primaryColorA={primaryColorA}
+          onThemeModeChangeA={handleThemeModeChangeA}
+          onPrimaryColorChangeA={handlePrimaryColorChangeA}
+          themeModeB={themeModeB}
+          primaryColorB={primaryColorB}
+          onThemeModeChangeB={handleThemeModeChangeB}
+          onPrimaryColorChangeB={handlePrimaryColorChangeB}
+        />
+      </Box>
     </ThemeProvider>
   );
 };

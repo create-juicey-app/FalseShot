@@ -25,6 +25,7 @@ import {
   FormControlLabel,
   CircularProgress,
   ButtonGroup,
+  Grid,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -101,6 +102,7 @@ function App() {
   );
 
   const [fontSize, setFontSize] = useState(28); // Default font size
+  const [selectedFont, setSelectedFont] = useState("Terminus");
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const offscreenCanvasRef = useRef(null);
@@ -247,6 +249,32 @@ function App() {
     };
     loadFont();
   }, []);
+
+  // Load selected font
+  useEffect(() => {
+    const loadFont = async () => {
+      if (selectedFont && selectedFont !== "Terminus") {
+        const font = new FontFace(selectedFont, `url(/fonts/${selectedFont}.ttf)`);
+        await font.load();
+        document.fonts.add(font);
+        setIsDirty(true);
+      }
+    };
+    loadFont();
+  }, [selectedFont]);
+
+  // Load selected font (add font to document for preview)
+  useEffect(() => {
+    const loadSelectedFont = async () => {
+      if (selectedFont && selectedFont !== "Terminus") {
+        const font = new FontFace(selectedFont, `url(/fonts/${selectedFont}.ttf)`);
+        await font.load();
+        document.fonts.add(font);
+        setIsDirty(true);
+      }
+    };
+    loadSelectedFont();
+  }, [selectedFont]);
 
   // Initialize canvas and context
   useEffect(() => {
@@ -640,7 +668,7 @@ function App() {
         );
 
         // Text rendering with automatic line breaks
-        offscreenCtx.font = `${fontSize}px ${terminusFont.family}`;
+        offscreenCtx.font = `${fontSize}px "${selectedFont}"`;
         offscreenCtx.fillStyle = "white";
         offscreenCtx.textAlign = "left";
 
@@ -709,6 +737,7 @@ function App() {
     useMask,
     selectedCustomExpression,
     fontSize, // Add fontSize to the dependency array
+    selectedFont
   ]);
   const handleCopyImage = useCallback(() => {
     if (imageData) {
@@ -872,6 +901,11 @@ function App() {
     ]
   );
 
+  const handleFontChange = (event) => {
+    setSelectedFont(event.target.value);
+    setIsDirty(true);
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -928,36 +962,80 @@ function App() {
 
         {/* Main Content */}
         <ContentContainer>
-          <InterfaceBox>
-            <Box mb={2}>
-              <Typography variant="h5" component="label" htmlFor="message">
-                Message
-              </Typography>
-              <TextField
-                id="message"
-                placeholder="What's the character going to say?"
-                multiline
-                rows={5}
-                fullWidth
-                variant="outlined"
-                value={message}
-                onChange={handleMessageChange}
-                inputProps={{ maxLength: 250 }}
-                sx={{ mt: 1 }}
-              />
-            </Box>
+          <InterfaceBox
+            sx={{
+              marginTop: { xs: "-80px", md: "0" },
+              padding: { xs: 2, md: 4 },
+              maxWidth: { xs: "100%", md: "1200px" },
+              width: "100%",
+            }}
+          >
+            <Grid container spacing={2}>
+              {/* Left Column: Character Selector */}
+              <Grid item xs={12} md={3}>
+                <Typography variant="h5">Characters</Typography>
+                {characterAccordions}
+              </Grid>
 
-            {/* Character Selection */}
-            <Box mt={2}>
-              <Typography variant="h5">Characters</Typography>
-              {characterAccordions}
-            </Box>
+              {/* Center Column: Message Input and Font Selector */}
+              <Grid item xs={12} md={6}>
+                <Box mb={2}>
+                  <Typography variant="h5" component="label" htmlFor="message">
+                    Message
+                  </Typography>
+                  <TextField
+                    id="message"
+                    placeholder="What's the character going to say?"
+                    multiline
+                    rows={5}
+                    fullWidth
+                    variant="outlined"
+                    value={message}
+                    onChange={handleMessageChange}
+                    inputProps={{ maxLength: 250 }}
+                    sx={{ mt: 1 }}
+                  />
+                </Box>
+
+                {/* Font Selector with Preview */}
+                <Box mt={2}>
+                  <FormControl fullWidth>
+                    <InputLabel id="font-selector-label">Font</InputLabel>
+                    <Select
+                      labelId="font-selector-label"
+                      id="font-selector"
+                      value={selectedFont}
+                      label="Font"
+                      onChange={handleFontChange}
+                    >
+                      {config.fonts.map((font) => (
+                        <MenuItem
+                          key={font}
+                          value={font}
+                          style={{ fontFamily: font }}
+                        >
+                          {font}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                {/* Other Controls */}
+                {/* ...existing code... */}
+              </Grid>
+
+              {/* Right Column: Background Selector */}
+              <Grid item xs={12} md={3}>
+                <Typography variant="h5">Backgrounds</Typography>
+                {backgroundSelection}
+              </Grid>
+            </Grid>
+
+            {/* Custom Expressions */}
             <Box mt={2}>{customAccordion}</Box>
-            {!selectedCustomExpression}
-            {/* Background Selection */}
-            {backgroundSelection}
 
-            {/* Mask Toggle */}
+            {/* Use Mask Toggle */}
             <Box mt={2}>
               <FormControlLabel
                 control={
@@ -970,8 +1048,6 @@ function App() {
                 label="Use Mask"
               />
             </Box>
-
-            {/* Expression Selection */}
           </InterfaceBox>
         </ContentContainer>
       </OutputBox>

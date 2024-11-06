@@ -1,17 +1,47 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { ThemeContext } from "./Theme";
 import { BackgroundPattern, PatternProvider } from "./BackgroundPattern";
 import Taskbar from "./Taskbar";
 import { useWindowManager } from "./contexts/WindowManagerContext";
 import WindowManager from "./WindowManager";
 import IconGrid from "./IconGrid";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import dynamic from "next/dynamic";
+import { BackgroundProvider, Background } from './Background';
+
+const TurnDeviceOverlay = () => (
+  <Box
+    sx={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: '#000',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 99999,
+    }}
+  >
+    <img 
+      src="/turndevice.png" 
+      alt="Please rotate your device"
+      style={{
+        maxWidth: '100%',
+        height: 'auto',
+        scale: 2,
+      }}
+    />
+  </Box>
+);
 
 const Desktop = () => {
   const { currentTheme, currentPattern, isDarkMode, themes } =
     useContext(ThemeContext);
   const { openWindow } = useWindowManager();
+  const isPortrait = useMediaQuery('(orientation: portrait)');
+  const isMobile = useMediaQuery('(max-width:768px)');
 
   const handleLaunchApp = async (app) => {
     const AppComponent = dynamic(() => import(`@/apps/${app.filename}`), {
@@ -34,7 +64,8 @@ const Desktop = () => {
   const activeTheme = themes[currentTheme];
 
   return (
-    <PatternProvider>
+    <BackgroundProvider>
+      {isMobile && isPortrait && <TurnDeviceOverlay />}
       <Box
         sx={{
           width: "100vw",
@@ -48,12 +79,12 @@ const Desktop = () => {
           transition: "background-color 0.3s ease",
         }}
       >
-        <BackgroundPattern />
+        <Background />
         <WindowManager />
         <IconGrid onLaunchApp={handleLaunchApp} />
         <Taskbar />
       </Box>
-    </PatternProvider>
+    </BackgroundProvider>
   );
 };
 
