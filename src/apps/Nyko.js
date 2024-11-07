@@ -26,6 +26,8 @@ import {
   CircularProgress,
   ButtonGroup,
   Grid,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -52,7 +54,9 @@ const InterfaceBox = styled(Box)(({ theme }) => ({
   flex: 1,
   padding: theme.spacing(2),
   overflowY: "auto",
-  scale: "90%",
+  width: "100%",
+  maxWidth: "100%", // Changed from 1400px to 100%
+  margin: "0 auto",
   marginTop: "-80px",
 }));
 
@@ -254,7 +258,10 @@ function App() {
   useEffect(() => {
     const loadFont = async () => {
       if (selectedFont && selectedFont !== "Terminus") {
-        const font = new FontFace(selectedFont, `url(/fonts/${selectedFont}.ttf)`);
+        const font = new FontFace(
+          selectedFont,
+          `url(/fonts/${selectedFont}.ttf)`
+        );
         await font.load();
         document.fonts.add(font);
         setIsDirty(true);
@@ -267,7 +274,10 @@ function App() {
   useEffect(() => {
     const loadSelectedFont = async () => {
       if (selectedFont && selectedFont !== "Terminus") {
-        const font = new FontFace(selectedFont, `url(/fonts/${selectedFont}.ttf)`);
+        const font = new FontFace(
+          selectedFont,
+          `url(/fonts/${selectedFont}.ttf)`
+        );
         await font.load();
         document.fonts.add(font);
         setIsDirty(true);
@@ -737,7 +747,7 @@ function App() {
     useMask,
     selectedCustomExpression,
     fontSize, // Add fontSize to the dependency array
-    selectedFont
+    selectedFont,
   ]);
   const handleCopyImage = useCallback(() => {
     if (imageData) {
@@ -906,6 +916,18 @@ function App() {
     setIsDirty(true);
   };
 
+  // Use MUI theme and useMediaQuery to detect screen size
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Use isSmallScreen to adjust styles dynamically
+  const contentContainerStyles = {
+    marginTop: isSmallScreen ? "-80px" : "0",
+    padding: isSmallScreen ? theme.spacing(2) : theme.spacing(4),
+    maxWidth: "100%", // Changed from 1200px to 100%
+    width: "100%",
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -916,7 +938,6 @@ function App() {
 
   return (
     <AppContainer>
-      {/* Output Section */}
       <OutputBox>
         <Box>
           <canvas
@@ -962,25 +983,28 @@ function App() {
 
         {/* Main Content */}
         <ContentContainer>
-          <InterfaceBox
-            sx={{
-              marginTop: { xs: "-80px", md: "0" },
-              padding: { xs: 2, md: 4 },
-              maxWidth: { xs: "100%", md: "1200px" },
-              width: "100%",
-            }}
-          >
-            <Grid container spacing={2}>
-              {/* Left Column: Character Selector */}
-              <Grid item xs={12} md={3}>
-                <Typography variant="h5">Characters</Typography>
-                {characterAccordions}
-              </Grid>
-
-              {/* Center Column: Message Input and Font Selector */}
+          <InterfaceBox sx={contentContainerStyles}>
+            <Grid container spacing={3} sx={{ px: 4 }}>
+              {" "}
+              {/* Added horizontal padding */}
+              {/* Characters Column - Even wider */}
               <Grid item xs={12} md={6}>
-                <Box mb={2}>
-                  <Typography variant="h5" component="label" htmlFor="message">
+                <Typography variant="h5" gutterBottom>
+                  Characters
+                </Typography>
+                {characterAccordions}
+                {/* Custom Expressions */}
+                <Box mt={2}>{customAccordion}</Box>
+              </Grid>
+              {/* Message and Controls Column - Slightly narrower */}
+              <Grid item xs={12} md={3}>
+                <Box mb={3}>
+                  <Typography
+                    variant="h5"
+                    component="label"
+                    htmlFor="message"
+                    gutterBottom
+                  >
                     Message
                   </Typography>
                   <TextField
@@ -993,19 +1017,21 @@ function App() {
                     value={message}
                     onChange={handleMessageChange}
                     inputProps={{ maxLength: 250 }}
-                    sx={{ mt: 1 }}
                   />
                 </Box>
 
-                {/* Font Selector with Preview */}
-                <Box mt={2}>
-                  <FormControl fullWidth>
-                    <InputLabel id="font-selector-label">Font</InputLabel>
+                {/* Font controls below message */}
+                <Box mb={3}>
+                  <Typography variant="h5" gutterBottom>
+                    Font Settings
+                  </Typography>
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel id="font-selector-label">Font Style</InputLabel>
                     <Select
                       labelId="font-selector-label"
                       id="font-selector"
                       value={selectedFont}
-                      label="Font"
+                      label="Font Style"
                       onChange={handleFontChange}
                     >
                       {config.fonts.map((font) => (
@@ -1019,35 +1045,27 @@ function App() {
                       ))}
                     </Select>
                   </FormControl>
+
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={useMask}
+                        onChange={handleMaskToggle}
+                        name="useMask"
+                      />
+                    }
+                    label="Use Mask"
+                  />
                 </Box>
-
-                {/* Other Controls */}
-                {/* ...existing code... */}
               </Grid>
-
-              {/* Right Column: Background Selector */}
+              {/* Backgrounds Column */}
               <Grid item xs={12} md={3}>
-                <Typography variant="h5">Backgrounds</Typography>
+                <Typography variant="h5" gutterBottom>
+                  Backgrounds
+                </Typography>
                 {backgroundSelection}
               </Grid>
             </Grid>
-
-            {/* Custom Expressions */}
-            <Box mt={2}>{customAccordion}</Box>
-
-            {/* Use Mask Toggle */}
-            <Box mt={2}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={useMask}
-                    onChange={handleMaskToggle}
-                    name="useMask"
-                  />
-                }
-                label="Use Mask"
-              />
-            </Box>
           </InterfaceBox>
         </ContentContainer>
       </OutputBox>
