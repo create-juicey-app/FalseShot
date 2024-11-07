@@ -34,9 +34,11 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import UploadIcon from "@mui/icons-material/Upload";
-import { styled } from "@mui/system";
+import { styled, keyframes, css } from "@mui/system"; // Add css import
 import Modal from "../components/Modal";
-import { keyframes } from "@mui/system"; // Add this import
+import Image from "next/image"; // Change the import line
+import gifshot from 'gifshot'; // Add gifshot import at the top
+
 // Styled Components
 const AppContainer = styled(Box)(({ theme }) => ({
   display: "flex",
@@ -76,6 +78,16 @@ const CustomExpressionImage = styled("img")(({ theme }) => ({
   imageRendering: "pixelated",
 }));
 
+const globalStyles = css`
+  @font-face {
+    font-family: 'Terminus';
+    src: url('/fonts/Terminus.ttf') format('truetype');
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+  }
+`;
+
 function App() {
   const [config, setConfig] = useState(null);
   const [message, setMessage] = useState("");
@@ -92,25 +104,20 @@ function App() {
   const [isMounted, setIsMounted] = useState(false);
   const [expandedCharacter, setExpandedCharacter] = useState(null);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
-  4;
   const [imageData, setImageData] = useState(null);
   const [expandedBackground, setExpandedBackground] = useState(null);
   const [customExpressions, setCustomExpressions] = useState([]);
   const [selectedCustomExpression, setSelectedCustomExpression] =
     useState(null);
-  const handleBackgroundAccordionChange = useCallback(
-    (backgroundName) => (event, isExpanded) => {
-      setExpandedBackground(isExpanded ? backgroundName : null);
-    },
-    []
-  );
-
   const [fontSize, setFontSize] = useState(28); // Default font size
   const [selectedFont, setSelectedFont] = useState("Terminus");
+  const [fontConfig, setFontConfig] = useState({});
+  const [currentLinePos, setCurrentLinePos] = useState(0);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const offscreenCanvasRef = useRef(null);
   const offscreenCtxRef = useRef(null);
+  const [cursorPosition, setCursorPosition] = useState(0);
 
   const renderRef = useRef(null);
   const imageCache = useRef({});
@@ -239,15 +246,20 @@ function App() {
   useEffect(() => {
     const loadFont = async () => {
       try {
-        const font = new FontFace("Teerminus", "url(/fonts/Terminus.ttf)");
-        await font.load();
-        document.fonts.add(font);
-        setTerminusFont(font);
+        // Create and inject global styles for Terminus only
+        const style = document.createElement('style');
+        style.textContent = globalStyles;
+        document.head.appendChild(style);
+
+        // Load Terminus font
+        const terminusFont = new FontFace('Terminus', 'url(/fonts/Terminus.ttf)');
+        await terminusFont.load();
+        document.fonts.add(terminusFont);
+        
+        setTerminusFont(terminusFont);
       } catch (error) {
         console.error("Failed to load font:", error);
-        setErrorMessage(
-          "Failed to load custom font. Using system font instead."
-        );
+        setErrorMessage("Failed to load Terminus font. Using system font instead.");
         setError(true);
       }
     };
@@ -356,11 +368,9 @@ function App() {
   // Handle message input with line limit
   const handleMessageChange = useCallback((e) => {
     const text = e.target.value;
-    const maxLines = 5; // Maximum number of lines
-    const fontSize = 28; // Example: use dynamic fontSize state value here
-
-    // Dynamically adjust maxLineLength based on font size
-    let maxLineLength = Math.floor(30 * (30 / fontSize));
+    const maxLines = 5;
+    const currentFont = config.fonts.find(f => f.name === selectedFont);
+    const maxLineLength = currentFont ? currentFont.charLimit : 30; // Default to 30 if not found
 
     // Split the text into lines, preserving user-entered line breaks
     let lines = text.split("\n");
@@ -403,7 +413,7 @@ function App() {
         setFontSize(28); // Default font size for 1-3 lines
       }
     }
-  }, []);
+  }, [selectedFont, config]);
 
   const handleCloseError = useCallback(() => {
     setIsErrorModalOpen(false);
@@ -500,7 +510,7 @@ function App() {
       if (imageCache.current[src]) {
         resolve(imageCache.current[src]);
       } else {
-        const img = new Image();
+        const img = document.createElement('img');
         img.onload = () => {
           imageCache.current[src] = img;
           resolve(img);
@@ -679,13 +689,18 @@ function App() {
 
         // Text rendering with automatic line breaks
         offscreenCtx.font = `${fontSize}px "${selectedFont}"`;
+        offscreenCtx.textBaseline = 'top';
+        offscreenCtx.textAlign = 'left';
+        // Add font smoothing prevention
+        offscreenCtx.imageSmoothingEnabled = false;
+        offscreenCtx.textRendering = 'pixelated';
         offscreenCtx.fillStyle = "white";
         offscreenCtx.textAlign = "left";
 
         const maxWidth = offscreenCanvasRef.current.width - 144; // Leave space for the expression
         const lineHeight = fontSize + 4; // Adjust line height based on font size
         const lines = message.split("\n");
-        let y = fontSize + 11; // Adjust starting y position based on font size
+        let y = fontSize-8; // Adjust starting y position based on font size
 
         for (let i = 0; i < lines.length; i++) {
           offscreenCtx.fillText(lines[i], 30, y);
@@ -912,7 +927,19 @@ function App() {
   );
 
   const handleFontChange = (event) => {
-    setSelectedFont(event.target.value);
+    const newFont = event.target.value;
+    setSelectedFont(newFont);
+    
+    // Reset text position when changing fonts
+    setCurrentLinePos(0);
+    
+    // Adjust font size based on the new font
+    const currentFont = config.fonts.find(f => f.name === newFont);
+    if (currentFont) {
+      // Recalculate line breaks with new font's character limit
+      handleMessageChange({ target: { value: message } });
+    }
+    
     setIsDirty(true);
   };
 
@@ -927,6 +954,163 @@ function App() {
     maxWidth: "100%", // Changed from 1200px to 100%
     width: "100%",
   };
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      // Don't prevent default behavior for arrow keys
+      return;
+    }
+  
+    const textarea = e.target;
+    const selectionStart = textarea.selectionStart;
+    const currentLineStart = textarea.value.lastIndexOf('\n', selectionStart - 1) + 1;
+    const currentLineEnd = textarea.value.indexOf('\n', selectionStart);
+    const currentLine = textarea.value.substring(
+      currentLineStart,
+      currentLineEnd === -1 ? textarea.value.length : currentLineEnd
+    );
+  
+    switch (e.key) {
+      case 'Home':
+        setCursorPosition(currentLineStart);
+        e.preventDefault();
+        break;
+      case 'End':
+        setCursorPosition(currentLineStart + currentLine.length);
+        e.preventDefault();
+        break;
+    }
+  }, []);
+
+  // Add new state for GIF generation
+  const [isGeneratingGif, setIsGeneratingGif] = useState(false);
+  const [generatedGif, setGeneratedGif] = useState(null);
+  const [arrowImage, setArrowImage] = useState(null);
+
+  // Add this near other useEffects
+  useEffect(() => {
+    // Load arrow image once
+    loadImage('/arrow.png').then(img => {
+      setArrowImage(img);
+    });
+  }, [loadImage]);
+
+  // Add new function to generate individual frames
+  const generateFrame = useCallback(async (text, frameIndex, isFinalFrame = false) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    // Clear canvas and redraw background/character
+    // This reuses most of the existing render logic
+    const character = config.characters.find(c => c.name === selectedCharacter);
+    const background = config.backgrounds.find(b => b.name === selectedBackground);
+
+    const [backgroundImg, expressionImg, maskImg] = await Promise.all([
+      loadImage(`/backgrounds/${background.file}`),
+      selectedCustomExpression
+        ? loadImage(selectedCustomExpression.data)
+        : loadImage(`/faces/${character.folder}/${character.expressions.find(
+            (e) => e.name === expression
+          )?.file || character.expressions[0].file}`),
+      useMask ? loadImage("/cmask.png") : null,
+    ]);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+
+    // Draw character
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = 96;
+    tempCanvas.height = 96;
+    const tempCtx = tempCanvas.getContext("2d");
+    tempCtx.drawImage(expressionImg, 0, 0, 96, 96);
+
+    if (useMask && maskImg) {
+      tempCtx.globalCompositeOperation = "destination-in";
+      tempCtx.drawImage(maskImg, 0, 0, 96, 96);
+    }
+
+    ctx.drawImage(tempCanvas, canvas.width - 114, 16, 96, 96);
+
+    // Draw text with typewriter effect
+    ctx.font = `${fontSize}px "${selectedFont}"`;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = "white";
+    
+    const lines = text.split('\n');
+    const lineHeight = fontSize + 4;
+    let y = fontSize - 8;
+
+    lines.forEach((line, lineIndex) => {
+      const chars = line.slice(0, frameIndex);
+      ctx.fillText(chars, 30, y + (lineHeight * lineIndex));
+    });
+
+    // Draw arrow if this is the final frame
+    if (isFinalFrame && arrowImage) {
+      const arrowX = canvas.width / 2 - arrowImage.width / 2;
+      const arrowY = canvas.height - arrowImage.height + 4; // Y offset of +4
+      ctx.drawImage(arrowImage, arrowX, arrowY);
+    }
+
+    return canvas.toDataURL();
+  }, [selectedCharacter, selectedBackground, selectedCustomExpression, expression, useMask, fontSize, selectedFont, loadImage, arrowImage]);
+
+  // Add function to generate GIF
+  const handleGenerateGif = useCallback(async () => {
+    setIsGeneratingGif(true);
+    
+    try {
+      const frames = [];
+      let currentIndex = 0;
+      const text = message;
+      
+      // Generate frames for each character - faster by incrementing by 3
+      while (currentIndex <= text.length) {
+        const frame = await generateFrame(text, currentIndex);
+        frames.push(frame);
+        
+        // Add extra frames for pauses, but fewer than before
+        if (text[currentIndex - 1] === '.' || text[currentIndex - 1] === ',') {
+          for (let i = 0; i < 5; i++) { // Reduced from 10 to 5 frames for pauses
+            frames.push(frame);
+          }
+        }
+        
+        currentIndex += 3; // Increment by 3 instead of 1 for faster text
+      }
+
+      // Generate the final frame with arrow
+      const finalFrame = await generateFrame(text, text.length, true); // Add true parameter for final frame
+      
+      // Add final frame multiple times for longer display
+      for (let i = 0; i < 50; i++) { // 50 frames = 5 seconds at 0.1s interval
+        frames.push(finalFrame);
+      }
+
+      // Generate GIF using gifshot
+      gifshot.createGIF({
+        images: frames,
+        gifWidth: 608,
+        gifHeight: 128,
+        interval: 0.1,
+        progressCallback: (progress) => {
+          console.log('GIF Progress:', progress);
+        }
+      }, function(obj) {
+        if(!obj.error) {
+          setGeneratedGif(obj.image);
+        }
+      });
+    } catch (error) {
+      console.error('Error generating GIF:', error);
+      setErrorMessage('Failed to generate GIF');
+      setError(true);
+    } finally {
+      setIsGeneratingGif(false);
+    }
+  }, [message, generateFrame]);
 
   if (isLoading) {
     return <CircularProgress />;
@@ -952,13 +1136,16 @@ function App() {
           />
           {imageData && (
             <Box>
-              <img
+              <Image
                 src={imageData}
                 alt="Rendered output"
+                width={608}
+                height={128}
                 style={{
                   imageRendering: "pixelated",
                   border: "1px solid #000",
                 }}
+                unoptimized // Add this prop since we're using a data URL
               />
             </Box>
           )}
@@ -980,6 +1167,54 @@ function App() {
         >
           Download Image
         </Button>
+
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleGenerateGif}
+          disabled={isGeneratingGif || !message}
+          sx={{ mt: 2, ml: 2 }}
+        >
+          {isGeneratingGif ? (
+            <>
+              <CircularProgress size={24} sx={{ mr: 1 }} />
+              Generating GIF...
+            </>
+          ) : (
+            'Generate GIF'
+          )}
+        </Button>
+
+        {/* Display generated GIF */}
+        {generatedGif && (
+          <Box mt={2}>
+            <Typography variant="h6">Generated GIF:</Typography>
+            <Image
+              src={generatedGif}
+              alt="Generated GIF"
+              width={608}
+              height={128}
+              style={{
+                imageRendering: "pixelated",
+                border: "1px solid #000",
+              }}
+              unoptimized
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = generatedGif;
+                link.download = 'dialogue-animation.gif';
+                link.click();
+              }}
+              sx={{ mt: 1 }}
+            >
+              Download GIF
+            </Button>
+          </Box>
+        )}
 
         {/* Main Content */}
         <ContentContainer>
@@ -1016,7 +1251,24 @@ function App() {
                     variant="outlined"
                     value={message}
                     onChange={handleMessageChange}
-                    inputProps={{ maxLength: 250 }}
+                    onKeyDown={handleKeyDown}
+                    inputProps={{ 
+                      maxLength: 250,
+                      style: { 
+                        fontFamily: selectedFont,
+                        fontSize: `${fontSize}px`
+                      }
+                    }}
+                    sx={{
+                      '& .MuiInputBase-input': {
+                        fontFamily: selectedFont,
+                        caretColor: 'auto', // Add this to ensure cursor is visible
+                      }
+                    }}
+                    // Add this to control cursor position
+                    onSelect={(e) => {
+                      setCursorPosition(e.target.selectionStart);
+                    }}
                   />
                 </Box>
 
@@ -1036,11 +1288,13 @@ function App() {
                     >
                       {config.fonts.map((font) => (
                         <MenuItem
-                          key={font}
-                          value={font}
-                          style={{ fontFamily: font }}
+                          key={font.name}
+                          value={font.name}
+                          style={{ 
+                            fontFamily: font.name === 'Terminus' ? 'Terminus' : font.name 
+                          }}
                         >
-                          {font}
+                          {font.name}
                         </MenuItem>
                       ))}
                     </Select>

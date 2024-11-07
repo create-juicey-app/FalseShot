@@ -6,6 +6,7 @@ import { useWindowManager } from "./contexts/WindowManagerContext";
 import WindowManager from "./WindowManager";
 import IconGrid from "./IconGrid";
 import { Box, useMediaQuery, Snackbar, Alert } from "@mui/material";
+import Image from 'next/image';
 import dynamic from "next/dynamic";
 import { BackgroundProvider, Background } from './Background';
 import { motion } from 'framer-motion';
@@ -23,17 +24,20 @@ const TurnDeviceOverlay = () => (
       justifyContent: 'center',
       alignItems: 'center',
       zIndex: 99999,
-    }}
-  >
-    <img 
+    }}>
+    <Image 
       src="/turndevice.png" 
       alt="Please rotate your device"
+      layout="intrinsic"
+      width={500}
+      height={500}
       style={{
         maxWidth: '100%',
         height: 'auto',
-        scale: 2,
+        transform: 'scale(2)',
       }}
     />
+    
   </Box>
 );
 
@@ -79,6 +83,7 @@ const Desktop = () => {
         width: app.windowProps.width,
         height: app.windowProps.height,
       },
+      icon: app.icon, // Pass the icon to the window
     });
   };
 
@@ -110,7 +115,7 @@ const Desktop = () => {
             backgroundColor: isDarkMode
               ? "#121212"
               : activeTheme.colors.background,
-            backgroundSize: currentPattern === "grid" ? "40px 40px" : "20px 20px",
+            // Remove the backgroundSize property here as it's handled by BackgroundPattern
             transition: "background-color 0.3s ease",
           }}
         >
@@ -126,12 +131,14 @@ const Desktop = () => {
           autoHideDuration={6000}
           onClose={() => setError(null)}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          sx={{zIndex: 999999}}
         >
           <Alert
             onClose={() => setError(null)}
             severity="error"
             variant="filled"
             sx={{ width: '100%' }}
+            
           >
             {error}
           </Alert>

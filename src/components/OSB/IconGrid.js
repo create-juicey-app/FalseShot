@@ -5,6 +5,7 @@ import { Rnd } from "react-rnd";
 import { apps } from "@/config/apps";
 import { ThemeContext } from "./Theme";
 import { isDebugModeEnabled } from './Theme';
+import Image from "next/image";
 
 const GRID_SIZE = 80;
 const ICON_WIDTH = 60;
@@ -197,11 +198,9 @@ const IconItem = React.memo(
                 alignItems: "center",
               }}
             >
-              <img
-                src={app.previewImage}
-                alt={app.label}
-                style={{ width: 200, marginBottom: 8 }}
-              />
+              <Typography variant="h6" sx={{ color: "white" }}>
+                {app.label}
+              </Typography>
               <Typography variant="body2" sx={{ color: "white" }}>
                 {app.description}
               </Typography>

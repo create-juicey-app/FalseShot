@@ -148,25 +148,25 @@ const OSSelectionLanding = ({
   };
 
   // Modify handleKeyDown to handle only visible options
-  const handleKeyDown = (e) => {
-    if (isBooting) return;
-
-    if (e.key === "ArrowUp") {
-      setSelectedIndex((prev) => Math.max(0, prev - 1));
-    } else if (e.key === "ArrowDown") {
-      // Only allow moving down if TWM is visible (debug mode)
-      if (debugMode) {
-        setSelectedIndex((prev) => Math.min(1, prev + 1));
-      }
-    } else if (e.key === "Enter") {
-      handleOSSelect(selectedIndex === 0 ? "alternative" : "twm");
-    }
-  };
-
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (isBooting) return;
+
+      if (e.key === "ArrowUp") {
+        setSelectedIndex((prev) => Math.max(0, prev - 1));
+      } else if (e.key === "ArrowDown") {
+        // Only allow moving down if TWM is visible (debug mode)
+        if (debugMode) {
+          setSelectedIndex((prev) => Math.min(1, prev + 1));
+        }
+      } else if (e.key === "Enter") {
+        handleOSSelect(selectedIndex === 0 ? "alternative" : "twm");
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
+  }, [isBooting, debugMode, selectedIndex]);
 
   if (selectedOS === "twm") {
     return (

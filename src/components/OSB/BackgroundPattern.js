@@ -66,9 +66,11 @@ export const BackgroundPattern = () => {
         width: "100%",
         height: "100%",
         pointerEvents: "none",
-        backgroundImage: `${patternStyle}, linear-gradient(135deg, transparent 0%, ${gradientColor} 100%)`,
-        backgroundSize: getBackgroundSize(currentPattern),
-        backgroundPosition: "center center",
+        backgroundImage: currentPattern === 'none' 
+          ? `linear-gradient(135deg, transparent 0%, ${gradientColor} 100%)`
+          : `${patternStyle}, linear-gradient(135deg, transparent 0%, ${gradientColor} 100%)`,
+        backgroundSize: `${getBackgroundSize(currentPattern)}, 100% 100%`,
+        backgroundPosition: "0 0, center center",
         backgroundRepeat: "repeat, no-repeat",
         opacity: 1,
         zIndex: 0,

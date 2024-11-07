@@ -17,47 +17,50 @@ export const createPatterns = (themeColor, isDark) => {
     },
     dots: {
       name: "Dots",
-      pattern: `radial-gradient(${baseColor} 1.5px, transparent 1.5px)`,
+      pattern: `radial-gradient(${baseColor} 2px, transparent 2px)`,
     },
     grid: {
       name: "Grid",
-      pattern: `linear-gradient(${baseColor} 1px, transparent 1px),
-                linear-gradient(to right, ${baseColor} 1px, transparent 1px)`,
+      pattern: `linear-gradient(${baseColor} 1.5px, transparent 1.5px),
+                linear-gradient(to right, ${baseColor} 1.5px, transparent 1.5px)`,
     },
     diagonal: {
       name: "Diagonal Lines",
       pattern: `repeating-linear-gradient(
         45deg,
         transparent,
-        transparent 9px,
-        ${baseColor} 9px,
-        ${baseColor} 10px
+        transparent 5px,
+        ${baseColor} 5px,
+        ${baseColor} 6px
       )`,
     },
     circles: {
       name: "Circles",
-      pattern: `repeating-radial-gradient(
-        circle,
-        ${baseColor} 0,
-        ${baseColor} 1px,
-        transparent 1px,
-        transparent 30px
-      )`,
+      pattern: `radial-gradient(circle at center, ${baseColor} 0, ${baseColor} 2px, transparent 2px, transparent 100%),
+                radial-gradient(circle at center, ${baseColor} 0, ${baseColor} 1.5px, transparent 1.5px, transparent 100%)`,
     },
     waves: {
       name: "Waves",
-      pattern: `
-        radial-gradient(circle at 50% 50%, ${baseColor} 25%, transparent 26%),
-        radial-gradient(circle at 50% 50%, transparent 19%, ${baseColor} 20%)
-      `,
+      pattern: `repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        ${baseColor} 10px,
+        ${baseColor} 11px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 10px,
+        ${baseColor} 10px,
+        ${baseColor} 11px
+      )`,
     },
     hexagons: {
       name: "Hexagons",
-      pattern: `
-        linear-gradient(30deg, ${baseColor} 12%, transparent 12.5%, transparent 87%, ${baseColor} 87.5%, ${baseColor}),
-        linear-gradient(150deg, ${baseColor} 12%, transparent 12.5%, transparent 87%, ${baseColor} 87.5%, ${baseColor}),
-        linear-gradient(90deg, transparent 37%, ${baseColor} 37.5%, ${baseColor} 62%, transparent 62.5%, transparent)
-      `,
+      pattern: `repeating-linear-gradient(60deg, ${baseColor}, ${baseColor} 1px, transparent 1px, transparent 15px),
+                repeating-linear-gradient(120deg, ${baseColor}, ${baseColor} 1px, transparent 1px, transparent 15px),
+                repeating-linear-gradient(180deg, ${baseColor}, ${baseColor} 1px, transparent 1px, transparent 15px)`
     },
   };
 };
@@ -65,17 +68,17 @@ export const createPatterns = (themeColor, isDark) => {
 export const getBackgroundSize = (pattern) => {
   switch (pattern) {
     case "grid":
-      return "20px 20px";
+      return "30px 30px";
     case "dots":
-      return "15px 15px";
+      return "20px 20px";
     case "circles":
-      return "40px 40px";
+      return "25px 25px";
     case "hexagons":
-      return "30px 52px";
+      return "35px 20px";
     case "waves":
-      return "50px 50px";
+      return "30px 30px";
     case "diagonal":
-      return "12px 12px";
+      return "15px 15px";
     default:
       return "20px 20px";
   }

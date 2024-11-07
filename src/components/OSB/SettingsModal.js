@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -19,6 +19,15 @@ import {
   IconButton,
   styled,
   Button,
+  Alert,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  Dialog as ConfirmDialog,
+  DialogActions,
+  DialogContent as ConfirmDialogContent,
+  DialogTitle as ConfirmDialogTitle,
 } from "@mui/material";
 import Image from "next/image";
 import {
@@ -32,7 +41,9 @@ import {
   WallpaperRounded,
   Texture,
   FormatColorFill,
-  Code, // Add this import
+  Code,
+  Download,
+  DeleteForever,
 } from "@mui/icons-material";
 import { ThemeContext } from "./Theme";
 import TabPanel from "./TabPanel";
@@ -108,9 +119,24 @@ const ModeIcon = styled(Box)(({ theme }) => ({
   },
 }));
 
+const InfoSection = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+  backgroundColor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#f5f5f5',
+}));
+
 const SettingsModal = ({ open, onClose }) => {
   const [tab, setTab] = useState(0);
   const [showReloadPrompt, setShowReloadPrompt] = useState(false);
+  const [systemInfo, setSystemInfo] = useState({
+    gitBranch: 'Unknown',
+    version: '1.0.0',
+    userAgent: '',
+    platform: '',
+    timestamp: new Date().toISOString(),
+  });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
   const {
     currentTheme,
     setCurrentTheme,
@@ -150,11 +176,189 @@ const SettingsModal = ({ open, onClose }) => {
     setShowReloadPrompt(true);
   };
 
+  useEffect(() => {
+    const getSystemInfo = async () => {
+      try {
+        // In a real app, you might want to fetch this from your backend
+        // This is just a mock implementation
+        setSystemInfo({
+          gitBranch: process.env.NEXT_PUBLIC_GIT_BRANCH || 'main',
+          version: process.env.NEXT_PUBLIC_VERSION || '1.0.0',
+          userAgent: window.navigator.userAgent,
+          platform: window.navigator.platform,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('Failed to fetch system info:', error);
+      }
+    };
+
+    if (tab === 4) { // Advanced tab
+      getSystemInfo();
+    }
+  }, [tab]);
+
+  const handleDownloadData = () => {
+    try {
+      const data = {
+        settings: {
+          theme: currentTheme,
+          darkMode: isDarkMode,
+          taskbar: taskbarSettings,
+          animation: animationSpeed,
+          debug: debugMode,
+        },
+        systemInfo,
+        timestamp: new Date().toISOString(),
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'osb-settings.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setShowDownloadConfirm(false);
+    } catch (error) {
+      console.error('Failed to download data:', error);
+    }
+  };
+
+  const handleDeleteData = () => {
+    try {
+      localStorage.clear();
+      setShowDeleteConfirm(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to delete data:', error);
+    }
+  };
+
   // Check if required context values are available
   if (!patterns || !currentPattern) {
     console.warn("Pattern context not properly initialized");
     return null;
   }
+
+  const renderAdvancedTab = () => (
+    <>
+      <Typography variant="h6" gutterBottom>
+        Advanced Settings
+      </Typography>
+
+      <InfoSection>
+        <Typography variant="subtitle2" color="primary" gutterBottom>
+          System Information
+        </Typography>
+        <List dense>
+          <ListItem>
+            <ListItemText primary="Git Branch" secondary={systemInfo.gitBranch} />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary="Version" secondary={systemInfo.version} />
+          </ListItem>
+          <ListItem>
+            <ListItemText 
+              primary="User Agent" 
+              secondary={systemInfo.userAgent}
+              sx={{ wordBreak: 'break-word' }}
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary="Platform" secondary={systemInfo.platform} />
+          </ListItem>
+          <ListItem>
+            <ListItemText 
+              primary="Last Updated" 
+              secondary={new Date(systemInfo.timestamp).toLocaleString()} 
+            />
+          </ListItem>
+        </List>
+      </InfoSection>
+
+      <InfoSection>
+        <Typography variant="subtitle2" color="primary" gutterBottom>
+          Debug Settings
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={debugMode}
+              onChange={handleDebugModeChange}
+            />
+          }
+          label="Debug Mode"
+        />
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Enables error reporting and shows debug applications
+        </Typography>
+      </InfoSection>
+
+      <InfoSection>
+        <Typography variant="subtitle2" color="primary" gutterBottom>
+          Data Management
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <Button
+              fullWidth
+              variant="outlined"
+              color="primary"
+              startIcon={<Download />}
+              onClick={() => setShowDownloadConfirm(true)}
+            >
+              Download Data
+            </Button>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Button
+              fullWidth
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteForever />}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete All Data
+            </Button>
+          </Grid>
+        </Grid>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}> Remember that your data isnt stored on our servers, it is stored inside of your computer with Local Storage for websites. </Typography>
+      </InfoSection>
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog open={showDownloadConfirm} onClose={() => setShowDownloadConfirm(false)}>
+        <ConfirmDialogTitle>Download Data</ConfirmDialogTitle>
+        <ConfirmDialogContent>
+          <Typography>Are you sure you want to download your settings and data?</Typography>
+        </ConfirmDialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowDownloadConfirm(false)}>Cancel</Button>
+          <Button onClick={handleDownloadData} variant="contained" color="primary">
+            Download
+          </Button>
+        </DialogActions>
+      </ConfirmDialog>
+
+      <ConfirmDialog open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)}>
+        <ConfirmDialogTitle>Delete All Data</ConfirmDialogTitle>
+        <ConfirmDialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            This action cannot be undone. All your settings will be reset to defaults.
+          </Alert>
+          <Typography>Are you sure you want to delete all your data?</Typography>
+        </ConfirmDialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+          <Button onClick={handleDeleteData} variant="contained" color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </ConfirmDialog>
+    </>
+  );
 
   return (
     <Dialog
@@ -569,46 +773,7 @@ const SettingsModal = ({ open, onClose }) => {
         </TabPanel>
 
         <TabPanel value={tab} index={4}>
-          <Typography variant="h6" gutterBottom>
-            Advanced Settings
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={debugMode}
-                    onChange={handleDebugModeChange}
-                  />
-                }
-                label="Debug Mode"
-              />
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Enables error reporting and shows debug applications
-              </Typography>
-              {showReloadPrompt && (
-                <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-                  <Typography color="warning.main" gutterBottom>
-                    Debug mode change requires a page reload to take effect.
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => window.location.reload()}
-                    sx={{ mr: 1 }}
-                  >
-                    Reload Now
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setShowReloadPrompt(false)}
-                  >
-                    Later
-                  </Button>
-                </Box>
-              )}
-            </Grid>
-          </Grid>
+          {renderAdvancedTab()}
         </TabPanel>
       </DialogContent>
     </Dialog>

@@ -1,16 +1,14 @@
 // Filename: components/OSB/WindowManager.js
-import React, { lazy } from "react";
+import React from "react";
 import { useWindowManager } from "./contexts/WindowManagerContext";
 import Window from "./Window";
-
+import dynamic from 'next/dynamic';
 const WindowManager = () => {
   const { windows, closeWindow, updateWindow, focusWindow } = useWindowManager();
 
   const loadComponent = (filename) => {
-    return lazy(() =>
-      import(`../../apps/${filename}`).catch((error) => {
-        // Handle error
-      })
+    return dynamic(() =>
+      import(`../../apps/${filename}`), { loading: () => <p>Loading...</p> }
     );
   };
 

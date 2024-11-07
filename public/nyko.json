@@ -276,8 +276,20 @@
     { "name": "In Stars And Time", "file": "satbg.png", "useMask": false }
   ],
   "fonts": [
-    "Terminus",
-    "Arial",
-    "Courier New"
+    {
+      "name": "Terminus",
+      "file": "Terminus.ttf",
+      "charLimit": 30
+    },
+    {
+      "name": "Arial",
+      "file": null,
+      "charLimit": 40
+    },
+    {
+      "name": "Courier New",
+      "file": null,
+      "charLimit": 35
+    }
   ]
 }

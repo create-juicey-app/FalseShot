@@ -67,7 +67,7 @@ const Home = () => {
   return (
     <ThemeProvider theme={themeA}>
       <CssBaseline />
-      <title>Falseshot V0.8</title>
+      <title>Falseshot</title>
       <Box sx={{ height: "100vh", width: "100vw", zIndex: -50 }}>
         <OSSelectionLanding
           themeA={themeA}
