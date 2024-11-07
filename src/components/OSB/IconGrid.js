@@ -162,6 +162,7 @@ const IconGrid = ({ onLaunchApp }) => {
   );
 };
 
+// Option 1: Add displayName to memo component
 const IconItem = React.memo(
   ({ app, position, layout, setLayout, onLaunchApp }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -245,5 +246,6 @@ const IconItem = React.memo(
     );
   }
 );
+IconItem.displayName = 'IconItem';
 
 export default IconGrid;
