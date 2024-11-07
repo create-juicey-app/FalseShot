@@ -28,6 +28,10 @@ import {
   Grid,
   useTheme,
   useMediaQuery,
+  Tabs,
+  Tab,
+  LinearProgress,
+  Skeleton, // Add this import
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -37,41 +41,52 @@ import UploadIcon from "@mui/icons-material/Upload";
 import { styled, keyframes, css } from "@mui/system"; // Add css import
 import Modal from "../components/Modal";
 import Image from "next/image"; // Change the import line
-import gifshot from 'gifshot'; // Add gifshot import at the top
-
+import gifshot from "gifshot"; // Add gifshot import at the top
+import { RefreshRounded } from "@mui/icons-material";
+import SearchIcon from "@mui/icons-material/Search"; // Add this import
 // Styled Components
+// Update AppContainer to handle full height and scrolling
 const AppContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
-  height: "100vh",
-}));
-
-const ContentContainer = styled(Box)(({ theme }) => ({
-  flex: 1,
-  display: "flex",
+  minHeight: "100vh",
+  maxHeight: "100vh",
   overflow: "hidden",
 }));
 
-const InterfaceBox = styled(Box)(({ theme }) => ({
+// Update ContentContainer to handle scrolling properly
+const ContentContainer = styled(Box)(({ theme }) => ({
   flex: 1,
-  padding: theme.spacing(2),
   overflowY: "auto",
+  paddingTop: theme.spacing(2),
+}));
+
+// Update InterfaceBox to remove conflicting styles
+const InterfaceBox = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2),
   width: "100%",
-  maxWidth: "100%", // Changed from 1400px to 100%
+  maxWidth: "100%",
   margin: "0 auto",
-  marginTop: "-80px",
+}));
+
+// Add SearchBox component
+const SearchBox = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  padding: theme.spacing(1),
+  gap: theme.spacing(1),
+  borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
 const OutputBox = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   textAlign: "center",
+  overflowY: "auto", // Add this line to enable scrolling
 }));
 
 const CustomExpressionImage = styled("img")(({ theme }) => ({
   width: "96px",
   height: "96px",
-  borderRadius: "5px",
-  cursor: "pointer",
   "&:hover": {
     boxShadow: theme.shadows[3],
   },
@@ -80,13 +95,26 @@ const CustomExpressionImage = styled("img")(({ theme }) => ({
 
 const globalStyles = css`
   @font-face {
-    font-family: 'Terminus';
-    src: url('/fonts/Terminus.ttf') format('truetype');
+    font-family: "Terminus";
+    src: url("/fonts/Terminus.ttf") format("truetype");
     font-display: swap;
     font-weight: normal;
     font-style: normal;
   }
 `;
+
+const PreviewContainer = styled(Box)(({ theme }) => ({
+  position: "sticky",
+  top: 0,
+  zIndex: 100,
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  padding: theme.spacing(2),
+  backgroundColor: theme.palette.background.paper,
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
 
 function App() {
   const [config, setConfig] = useState(null);
@@ -118,6 +146,8 @@ function App() {
   const offscreenCanvasRef = useRef(null);
   const offscreenCtxRef = useRef(null);
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [previewTab, setPreviewTab] = useState(0);
+  const [gifProgress, setGifProgress] = useState(0);
 
   const renderRef = useRef(null);
   const imageCache = useRef({});
@@ -209,6 +239,16 @@ function App() {
     transition: "color 0.3s ease",
   }));
 
+  const PreviewContainer = styled(Box)(({ theme }) => ({
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: theme.spacing(2),
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: theme.shape.borderRadius,
+  }));
+
   useEffect(() => {
     setIsMounted(true);
     return () => setIsMounted(false);
@@ -247,19 +287,24 @@ function App() {
     const loadFont = async () => {
       try {
         // Create and inject global styles for Terminus only
-        const style = document.createElement('style');
+        const style = document.createElement("style");
         style.textContent = globalStyles;
         document.head.appendChild(style);
 
         // Load Terminus font
-        const terminusFont = new FontFace('Terminus', 'url(/fonts/Terminus.ttf)');
+        const terminusFont = new FontFace(
+          "Terminus",
+          "url(/fonts/Terminus.ttf)"
+        );
         await terminusFont.load();
         document.fonts.add(terminusFont);
-        
+
         setTerminusFont(terminusFont);
       } catch (error) {
         console.error("Failed to load font:", error);
-        setErrorMessage("Failed to load Terminus font. Using system font instead.");
+        setErrorMessage(
+          "Failed to load Terminus font. Using system font instead."
+        );
         setError(true);
       }
     };
@@ -366,54 +411,57 @@ function App() {
     setIsDirty(true);
   }, []);
   // Handle message input with line limit
-  const handleMessageChange = useCallback((e) => {
-    const text = e.target.value;
-    const maxLines = 5;
-    const currentFont = config.fonts.find(f => f.name === selectedFont);
-    const maxLineLength = currentFont ? currentFont.charLimit : 30; // Default to 30 if not found
+  const handleMessageChange = useCallback(
+    (e) => {
+      const text = e.target.value;
+      const maxLines = 5;
+      const currentFont = config.fonts.find((f) => f.name === selectedFont);
+      const maxLineLength = currentFont ? currentFont.charLimit : 30; // Default to 30 if not found
 
-    // Split the text into lines, preserving user-entered line breaks
-    let lines = text.split("\n");
+      // Split the text into lines, preserving user-entered line breaks
+      let lines = text.split("\n");
 
-    // Process each line to ensure max line length
-    let formattedLines = [];
-    lines.forEach((line, index) => {
-      while (line.length > maxLineLength) {
-        let splitAt = line.lastIndexOf(" ", maxLineLength);
-        if (splitAt === -1) splitAt = maxLineLength; // In case of long words
-        formattedLines.push(line.substring(0, splitAt));
-        line = line.substring(splitAt + 1);
-      }
-      formattedLines.push(line);
-    });
+      // Process each line to ensure max line length
+      let formattedLines = [];
+      lines.forEach((line, index) => {
+        while (line.length > maxLineLength) {
+          let splitAt = line.lastIndexOf(" ", maxLineLength);
+          if (splitAt === -1) splitAt = maxLineLength; // In case of long words
+          formattedLines.push(line.substring(0, splitAt));
+          line = line.substring(splitAt + 1);
+        }
+        formattedLines.push(line);
+      });
 
-    // Enforce the maxLines limit
-    formattedLines = formattedLines.slice(0, maxLines);
+      // Enforce the maxLines limit
+      formattedLines = formattedLines.slice(0, maxLines);
 
-    const formattedText = formattedLines.join("\n");
+      const formattedText = formattedLines.join("\n");
 
-    if (formattedLines.length > maxLines) {
-      setErrorMessage(
-        `Your message is too long, only ${maxLines} lines of text can be rendered!`
-      );
-      setError(true);
-      setIsErrorModalOpen(true);
-    } else {
-      setError(false);
-      setErrorMessage("");
-      setMessage(formattedText);
-      setIsDirty(true);
-
-      // Adjust font size based on line count
-      if (formattedLines.length === 5) {
-        setFontSize(16); // Smallest font size for 5 lines
-      } else if (formattedLines.length === 4) {
-        setFontSize(20); // Medium font size for 4 lines
+      if (formattedLines.length > maxLines) {
+        setErrorMessage(
+          `Your message is too long, only ${maxLines} lines of text can be rendered!`
+        );
+        setError(true);
+        setIsErrorModalOpen(true);
       } else {
-        setFontSize(28); // Default font size for 1-3 lines
+        setError(false);
+        setErrorMessage("");
+        setMessage(formattedText);
+        setIsDirty(true);
+
+        // Adjust font size based on line count
+        if (formattedLines.length === 5) {
+          setFontSize(16); // Smallest font size for 5 lines
+        } else if (formattedLines.length === 4) {
+          setFontSize(20); // Medium font size for 4 lines
+        } else {
+          setFontSize(28); // Default font size for 1-3 lines
+        }
       }
-    }
-  }, [selectedFont, config]);
+    },
+    [selectedFont, config]
+  );
 
   const handleCloseError = useCallback(() => {
     setIsErrorModalOpen(false);
@@ -510,7 +558,7 @@ function App() {
       if (imageCache.current[src]) {
         resolve(imageCache.current[src]);
       } else {
-        const img = document.createElement('img');
+        const img = document.createElement("img");
         img.onload = () => {
           imageCache.current[src] = img;
           resolve(img);
@@ -527,73 +575,98 @@ function App() {
     },
     []
   );
+  const [searchTerms, setSearchTerms] = useState({});
+
   const characterAccordions = useMemo(() => {
     if (!config) return null;
 
-    return config.characters.map((character) => (
-      <Accordion
-        key={character.name}
-        expanded={expandedCharacter === character.name}
-        onChange={handleCharacterAccordionChange(character.name)}
-      >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls={`${character.name}-content`}
-          id={`${character.name}-header`}
+    return config.characters.map((character) => {
+      const searchTerm = searchTerms[character.name] || "";
+      const filteredExpressions = character.expressions.filter((expr) =>
+        expr.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      return (
+        <Accordion
+          key={character.name}
+          expanded={expandedCharacter === character.name}
+          onChange={handleCharacterAccordionChange(character.name)}
         >
-          <Box display="flex" alignItems="center">
-            <CharacterImage
-              src={`/faces/${character.folder}/${
-                character.expressions[0]?.file || ""
-              }`}
-              alt={character.name}
-            />
-            <Typography variant="h4" sx={{ ml: 2 }}>
-              {character.name}
-            </Typography>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails>
-          <ResponsiveGrid>
-            {character.expressions.map((expr) => (
-              <Tooltip key={expr.name} title={expr.name}>
-                <Box
-                  component="img"
-                  src={`/faces/${character.folder}/${expr.file}`}
-                  alt={expr.name}
-                  onClick={() => {
-                    handleCharacterChange(character.name);
-                    handleExpressionChange(expr.name);
-                  }}
-                  sx={{
-                    width: "96px",
-                    height: "96px",
-                    border:
-                      selectedCharacter === character.name &&
-                      expression === expr.name
-                        ? "2px solid"
-                        : "2px solid transparent",
-                    borderColor:
-                      selectedCharacter === character.name &&
-                      expression === expr.name
-                        ? "primary.main"
-                        : "transparent",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                    "&:hover": {
-                      borderColor: "primary.light",
-                    },
-                    imageRendering: "pixelated",
-                  }}
-                />
-              </Tooltip>
-            ))}
-          </ResponsiveGrid>
-        </AccordionDetails>
-      </Accordion>
-    ));
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls={`${character.name}-content`}
+            id={`${character.name}-header`}
+          >
+            <Box display="flex" alignItems="center">
+              <CharacterImage
+                src={`/faces/${character.folder}/${
+                  character.expressions[0]?.file || ""
+                }`}
+                alt={character.name}
+              />
+              <Typography variant="h4" sx={{ ml: 2 }}>
+                {character.name}
+              </Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <SearchBox>
+              <SearchIcon />
+              <TextField
+                size="small"
+                fullWidth
+                placeholder="Search expressions..."
+                value={searchTerms[character.name] || ""}
+                onChange={(e) =>
+                  setSearchTerms((prev) => ({
+                    ...prev,
+                    [character.name]: e.target.value,
+                  }))
+                }
+              />
+            </SearchBox>
+            <ResponsiveGrid>
+              {filteredExpressions.map((expr) => (
+                <Tooltip key={expr.name} title={expr.name}>
+                  <Box
+                    component="img"
+                    src={`/faces/${character.folder}/${expr.file}`}
+                    alt={expr.name}
+                    onClick={() => {
+                      handleCharacterChange(character.name);
+                      handleExpressionChange(expr.name);
+                    }}
+                    sx={{
+                      width: "96px",
+                      height: "96px",
+                      border:
+                        selectedCharacter === character.name &&
+                        expression === expr.name
+                          ? "2px solid"
+                          : "2px solid transparent",
+                      borderColor:
+                        selectedCharacter === character.name &&
+                        expression === expr.name
+                          ? "primary.main"
+                          : "transparent",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                      "&:hover": {
+                        borderColor: "primary.light",
+                      },
+                      imageRendering: "pixelated",
+                    }}
+                  />
+                </Tooltip>
+              ))}
+            </ResponsiveGrid>
+          </AccordionDetails>
+        </Accordion>
+      );
+    });
   }, [
     config,
+    searchTerms,
     expandedCharacter,
     selectedCharacter,
     expression,
@@ -689,18 +762,18 @@ function App() {
 
         // Text rendering with automatic line breaks
         offscreenCtx.font = `${fontSize}px "${selectedFont}"`;
-        offscreenCtx.textBaseline = 'top';
-        offscreenCtx.textAlign = 'left';
+        offscreenCtx.textBaseline = "top";
+        offscreenCtx.textAlign = "left";
         // Add font smoothing prevention
         offscreenCtx.imageSmoothingEnabled = false;
-        offscreenCtx.textRendering = 'pixelated';
+        offscreenCtx.textRendering = "pixelated";
         offscreenCtx.fillStyle = "white";
         offscreenCtx.textAlign = "left";
 
         const maxWidth = offscreenCanvasRef.current.width - 144; // Leave space for the expression
         const lineHeight = fontSize + 4; // Adjust line height based on font size
         const lines = message.split("\n");
-        let y = fontSize-8; // Adjust starting y position based on font size
+        let y = fontSize - 8; // Adjust starting y position based on font size
 
         for (let i = 0; i < lines.length; i++) {
           offscreenCtx.fillText(lines[i], 30, y);
@@ -929,17 +1002,17 @@ function App() {
   const handleFontChange = (event) => {
     const newFont = event.target.value;
     setSelectedFont(newFont);
-    
+
     // Reset text position when changing fonts
     setCurrentLinePos(0);
-    
+
     // Adjust font size based on the new font
-    const currentFont = config.fonts.find(f => f.name === newFont);
+    const currentFont = config.fonts.find((f) => f.name === newFont);
     if (currentFont) {
       // Recalculate line breaks with new font's character limit
       handleMessageChange({ target: { value: message } });
     }
-    
+
     setIsDirty(true);
   };
 
@@ -956,26 +1029,27 @@ function App() {
   };
 
   const handleKeyDown = useCallback((e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       // Don't prevent default behavior for arrow keys
       return;
     }
-  
+
     const textarea = e.target;
     const selectionStart = textarea.selectionStart;
-    const currentLineStart = textarea.value.lastIndexOf('\n', selectionStart - 1) + 1;
-    const currentLineEnd = textarea.value.indexOf('\n', selectionStart);
+    const currentLineStart =
+      textarea.value.lastIndexOf("\n", selectionStart - 1) + 1;
+    const currentLineEnd = textarea.value.indexOf("\n", selectionStart);
     const currentLine = textarea.value.substring(
       currentLineStart,
       currentLineEnd === -1 ? textarea.value.length : currentLineEnd
     );
-  
+
     switch (e.key) {
-      case 'Home':
+      case "Home":
         setCursorPosition(currentLineStart);
         e.preventDefault();
         break;
-      case 'End':
+      case "End":
         setCursorPosition(currentLineStart + currentLine.length);
         e.preventDefault();
         break;
@@ -990,208 +1064,230 @@ function App() {
   // Add this near other useEffects
   useEffect(() => {
     // Load arrow image once
-    loadImage('/arrow.png').then(img => {
+    loadImage("/arrow.png").then((img) => {
       setArrowImage(img);
     });
   }, [loadImage]);
 
-  // Add new function to generate individual frames
-  const generateFrame = useCallback(async (text, frameIndex, isFinalFrame = false) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    // Clear canvas and redraw background/character
-    // This reuses most of the existing render logic
-    const character = config.characters.find(c => c.name === selectedCharacter);
-    const background = config.backgrounds.find(b => b.name === selectedBackground);
+  // Add new state for arrow animation
+  const [arrowOffset, setArrowOffset] = useState(-3);
 
-    const [backgroundImg, expressionImg, maskImg] = await Promise.all([
-      loadImage(`/backgrounds/${background.file}`),
-      selectedCustomExpression
-        ? loadImage(selectedCustomExpression.data)
-        : loadImage(`/faces/${character.folder}/${character.expressions.find(
-            (e) => e.name === expression
-          )?.file || character.expressions[0].file}`),
-      useMask ? loadImage("/cmask.png") : null,
-    ]);
+  // Modify generateFrame function to handle text animation per line
+  const generateFrame = useCallback(
+    async (
+      lines,
+      currentLineIndex,
+      charIndex,
+      arrowYOffset = -3,
+      showArrow = false
+    ) => {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+      // Clear canvas and redraw background/character
+      const character = config.characters.find(
+        (c) => c.name === selectedCharacter
+      );
+      const background = config.backgrounds.find(
+        (b) => b.name === selectedBackground
+      );
 
-    // Draw character
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = 96;
-    tempCanvas.height = 96;
-    const tempCtx = tempCanvas.getContext("2d");
-    tempCtx.drawImage(expressionImg, 0, 0, 96, 96);
+      const [backgroundImg, expressionImg, maskImg] = await Promise.all([
+        loadImage(`/backgrounds/${background.file}`),
+        selectedCustomExpression
+          ? loadImage(selectedCustomExpression.data)
+          : loadImage(
+              `/faces/${character.folder}/${
+                character.expressions.find((e) => e.name === expression)
+                  ?.file || character.expressions[0].file
+              }`
+            ),
+        useMask ? loadImage("/cmask.png") : null,
+      ]);
 
-    if (useMask && maskImg) {
-      tempCtx.globalCompositeOperation = "destination-in";
-      tempCtx.drawImage(maskImg, 0, 0, 96, 96);
-    }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
 
-    ctx.drawImage(tempCanvas, canvas.width - 114, 16, 96, 96);
+      // Draw character
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = 96;
+      tempCanvas.height = 96;
+      const tempCtx = tempCanvas.getContext("2d");
+      tempCtx.drawImage(expressionImg, 0, 0, 96, 96);
 
-    // Draw text with typewriter effect
-    ctx.font = `${fontSize}px "${selectedFont}"`;
-    ctx.textBaseline = 'top';
-    ctx.textAlign = 'left';
-    ctx.fillStyle = "white";
-    
-    const lines = text.split('\n');
-    const lineHeight = fontSize + 4;
-    let y = fontSize - 8;
+      if (useMask && maskImg) {
+        tempCtx.globalCompositeOperation = "destination-in";
+        tempCtx.drawImage(maskImg, 0, 0, 96, 96);
+      }
 
-    lines.forEach((line, lineIndex) => {
-      const chars = line.slice(0, frameIndex);
-      ctx.fillText(chars, 30, y + (lineHeight * lineIndex));
-    });
+      ctx.drawImage(tempCanvas, canvas.width - 114, 16, 96, 96);
 
-    // Draw arrow if this is the final frame
-    if (isFinalFrame && arrowImage) {
-      const arrowX = canvas.width / 2 - arrowImage.width / 2;
-      const arrowY = canvas.height - arrowImage.height + 4; // Y offset of +4
-      ctx.drawImage(arrowImage, arrowX, arrowY);
-    }
+      // Draw text with line-by-line animation
+      ctx.font = `${fontSize}px "${selectedFont}"`;
+      ctx.textBaseline = "top";
+      ctx.textAlign = "left";
+      ctx.fillStyle = "white";
 
-    return canvas.toDataURL();
-  }, [selectedCharacter, selectedBackground, selectedCustomExpression, expression, useMask, fontSize, selectedFont, loadImage, arrowImage]);
+      const lineHeight = fontSize + 4;
+      let y = fontSize - 8;
 
-  // Add function to generate GIF
+      // Draw completed lines
+      for (let i = 0; i < currentLineIndex; i++) {
+        ctx.fillText(lines[i], 30, y + lineHeight * i);
+      }
+
+      // Draw current line with typewriter effect
+      if (currentLineIndex < lines.length) {
+        const currentLineText = lines[currentLineIndex].slice(0, charIndex);
+        ctx.fillText(currentLineText, 30, y + lineHeight * currentLineIndex);
+      }
+
+      // Draw arrow with animation if this is showing the arrow
+      if (showArrow && arrowImage) {
+        const arrowX = canvas.width / 2 - arrowImage.width / 2;
+        const arrowY = canvas.height - arrowImage.height + arrowYOffset;
+        ctx.drawImage(arrowImage, arrowX, arrowY);
+      }
+
+      return canvas.toDataURL();
+    },
+    [
+      selectedCharacter,
+      selectedBackground,
+      selectedCustomExpression,
+      expression,
+      useMask,
+      fontSize,
+      selectedFont,
+      loadImage,
+      arrowImage,
+    ]
+  );
+
+  // Modify handleGenerateGif function
   const handleGenerateGif = useCallback(async () => {
     setIsGeneratingGif(true);
-    
+    setGifProgress(0);
+    setGeneratedGif(null); // Reset previous GIF
+
     try {
+      const lines = message.split("\n");
       const frames = [];
-      let currentIndex = 0;
-      const text = message;
-      
-      // Generate frames for each character - faster by incrementing by 3
-      while (currentIndex <= text.length) {
-        const frame = await generateFrame(text, currentIndex);
-        frames.push(frame);
-        
-        // Add extra frames for pauses, but fewer than before
-        if (text[currentIndex - 1] === '.' || text[currentIndex - 1] === ',') {
-          for (let i = 0; i < 5; i++) { // Reduced from 10 to 5 frames for pauses
-            frames.push(frame);
+      const punctuationPauses = [".", "!", "?", ";", ","];
+      const pauseFrames = {
+        ".": 5,
+        "!": 5,
+        "?": 5,
+        ";": 3,
+        ",": 2,
+      };
+
+      let totalSteps = lines.reduce((acc, line) => acc + line.length, 0);
+      let currentStep = 0;
+
+      // Generate frames with optimizations
+      const baseFrame = await generateFrame(lines, 0, 0);
+      frames.push(baseFrame);
+      setGifProgress(5);
+
+      // Generate text animation frames
+      for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        const line = lines[lineIndex];
+        for (let charIndex = 0; charIndex <= line.length; charIndex++) {
+          // Change increment from 2 to 1
+          const frame = await generateFrame(lines, lineIndex, charIndex);
+          frames.push(frame);
+
+          if (
+            charIndex > 0 &&
+            punctuationPauses.includes(line[charIndex - 1])
+          ) {
+            const pauseCount = pauseFrames[line[charIndex - 1]] || 1;
+            const pauseFrame = frames[frames.length - 1];
+            for (let i = 0; i < pauseCount; i++) {
+              frames.push(pauseFrame);
+            }
           }
+
+          currentStep += 1; // Change increment from 2 to 1
+          setGifProgress(5 + (currentStep / totalSteps) * 70);
         }
-        
-        currentIndex += 3; // Increment by 3 instead of 1 for faster text
       }
 
-      // Generate the final frame with arrow
-      const finalFrame = await generateFrame(text, text.length, true); // Add true parameter for final frame
-      
-      // Add final frame multiple times for longer display
-      for (let i = 0; i < 50; i++) { // 50 frames = 5 seconds at 0.1s interval
-        frames.push(finalFrame);
+      // Generate arrow animation frames
+      setGifProgress(75);
+      const arrowAnimationFrames = [];
+      const animationSteps = 15; // Keep the original steps
+
+      for (let i = 0; i < animationSteps; i++) {
+        const arrowOffset = -3 + Math.sin((i / animationSteps) * Math.PI) * 2;
+        const frameWithArrow = await generateFrame(
+          lines,
+          lines.length - 1,
+          lines[lines.length - 1].length,
+          arrowOffset,
+          true
+        );
+        arrowAnimationFrames.push(frameWithArrow);
+        setGifProgress(75 + (i / animationSteps) * 15);
       }
 
-      // Generate GIF using gifshot
-      gifshot.createGIF({
+      // Add arrow animation cycles (increase to 10 times)
+      for (let cycle = 0; cycle < 10; cycle++) {
+        frames.push(...arrowAnimationFrames);
+      }
+
+      setGifProgress(90);
+
+      // Create GIF with optimized settings
+      const gifOptions = {
         images: frames,
         gifWidth: 608,
         gifHeight: 128,
-        interval: 0.1,
-        progressCallback: (progress) => {
-          console.log('GIF Progress:', progress);
-        }
-      }, function(obj) {
-        if(!obj.error) {
-          setGeneratedGif(obj.image);
-        }
+        interval: 0.05, // Increase frame rate
+        numWorkers: 2,
+        quality: 5,
+        progressCallback: (captureProgress) => {
+          setGifProgress(90 + captureProgress * 10);
+        },
+      };
+
+      return new Promise((resolve, reject) => {
+        gifshot.createGIF(gifOptions, (result) => {
+          if (!result.error) {
+            setGeneratedGif(result.image);
+            setGifProgress(100);
+            setIsGeneratingGif(false);
+            resolve();
+          } else {
+            console.error("GIF generation error:", result.errorMsg);
+            setErrorMessage(`Failed to generate GIF: ${result.errorMsg}`);
+            setError(true);
+            setIsGeneratingGif(false);
+            setGifProgress(0);
+            reject(new Error(result.errorMsg));
+          }
+        });
       });
     } catch (error) {
-      console.error('Error generating GIF:', error);
-      setErrorMessage('Failed to generate GIF');
+      console.error("GIF generation error:", error);
+      setErrorMessage(
+        `Failed to generate GIF: ${error.message || "Unknown error"}`
+      );
       setError(true);
-    } finally {
       setIsGeneratingGif(false);
+      setGifProgress(0);
     }
   }, [message, generateFrame]);
 
-  if (isLoading) {
-    return <CircularProgress />;
-  }
-
-  if (!config) {
-    return <Typography>Error loading configuration</Typography>;
-  }
-
-  return (
-    <AppContainer>
-      <OutputBox>
+  const renderPreview = () => (
+    <PreviewContainer>
+      {previewTab === 0 && (
         <Box>
-          <canvas
-            ref={canvasRef}
-            width="608"
-            height="128"
-            style={{
-              display: "none",
-              imageRendering: "pixelated",
-              border: "1px solid #000",
-            }}
-          />
-          {imageData && (
-            <Box>
-              <Image
-                src={imageData}
-                alt="Rendered output"
-                width={608}
-                height={128}
-                style={{
-                  imageRendering: "pixelated",
-                  border: "1px solid #000",
-                }}
-                unoptimized // Add this prop since we're using a data URL
-              />
-            </Box>
-          )}
-        </Box>
-        <Button
-          color="primary"
-          startIcon={<ContentCopyIcon />}
-          onClick={handleCopyImage}
-          sx={{ mt: 2, mr: 2 }}
-        >
-          Copy Image
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<DownloadIcon />}
-          onClick={handleDownload}
-          sx={{ mt: 2 }}
-        >
-          Download Image
-        </Button>
-
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleGenerateGif}
-          disabled={isGeneratingGif || !message}
-          sx={{ mt: 2, ml: 2 }}
-        >
-          {isGeneratingGif ? (
-            <>
-              <CircularProgress size={24} sx={{ mr: 1 }} />
-              Generating GIF...
-            </>
-          ) : (
-            'Generate GIF'
-          )}
-        </Button>
-
-        {/* Display generated GIF */}
-        {generatedGif && (
-          <Box mt={2}>
-            <Typography variant="h6">Generated GIF:</Typography>
+          {imageData ? (
             <Image
-              src={generatedGif}
-              alt="Generated GIF"
+              src={imageData}
+              alt="Rendered output"
               width={608}
               height={128}
               style={{
@@ -1200,139 +1296,340 @@ function App() {
               }}
               unoptimized
             />
+          ) : (
+            <Skeleton variant="rectangular" width={608} height={128} />
+          )}
+          <ButtonGroup sx={{ mt: 2 }}>
+            <Button
+              startIcon={<ContentCopyIcon />}
+              onClick={handleCopyImage}
+              disabled={!imageData}
+            >
+              Copy Image
+            </Button>
+            <Button
+              startIcon={<DownloadIcon />}
+              onClick={handleDownload}
+              disabled={!imageData}
+            >
+              Download Image
+            </Button>
+          </ButtonGroup>
+        </Box>
+      )}
+
+      {previewTab === 1 && (
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          {isGeneratingGif ? (
+            <>
+              <Skeleton width={608} height={128} />
+              <Box sx={{ width: "100%", mt: 2 }}>
+                <LinearProgress variant="determinate" value={gifProgress} />
+                <Typography variant="caption" sx={{ mt: 1 }}>
+                  {Math.round(gifProgress)}% - Processing frames...
+                </Typography>
+              </Box>
+            </>
+          ) : generatedGif ? (
+            <>
+              <Image
+                src={generatedGif}
+                alt="Generated GIF"
+                width={608}
+                height={128}
+                style={{
+                  imageRendering: "pixelated",
+                  border: "1px solid #000",
+                }}
+                unoptimized
+              />
+              <ButtonGroup sx={{ mt: 2 }}>
+                <Button
+                  startIcon={<DownloadIcon />}
+                  onClick={() => {
+                    const link = document.createElement("a");
+                    link.href = generatedGif;
+                    link.download = "dialogue-animation.gif";
+                    link.click();
+                  }}
+                >
+                  Download GIF
+                </Button>
+                <Button
+                  startIcon={<ContentCopyIcon />}
+                  onClick={() => navigator.clipboard.writeText(generatedGif)}
+                >
+                  Copy GIF URL
+                </Button>
+                <Button
+                  startIcon={<RefreshRounded />} // Add a refresh icon
+                  onClick={handleGenerateGif}
+                >
+                  Regenerate GIF
+                </Button>
+              </ButtonGroup>
+            </>
+          ) : (
             <Button
               variant="contained"
-              color="primary"
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = generatedGif;
-                link.download = 'dialogue-animation.gif';
-                link.click();
-              }}
-              sx={{ mt: 1 }}
+              onClick={handleGenerateGif}
+              disabled={isGeneratingGif || !message}
+              sx={{ mt: 2 }}
             >
-              Download GIF
+              Generate GIF
             </Button>
-          </Box>
-        )}
+          )}
+        </Box>
+      )}
+    </PreviewContainer>
+  );
 
-        {/* Main Content */}
-        <ContentContainer>
-          <InterfaceBox sx={contentContainerStyles}>
-            <Grid container spacing={3} sx={{ px: 4 }}>
-              {" "}
-              {/* Added horizontal padding */}
-              {/* Characters Column - Even wider */}
-              <Grid item xs={12} md={6}>
-                <Typography variant="h5" gutterBottom>
-                  Characters
-                </Typography>
-                {characterAccordions}
-                {/* Custom Expressions */}
-                <Box mt={2}>{customAccordion}</Box>
-              </Grid>
-              {/* Message and Controls Column - Slightly narrower */}
-              <Grid item xs={12} md={3}>
-                <Box mb={3}>
-                  <Typography
-                    variant="h5"
-                    component="label"
-                    htmlFor="message"
-                    gutterBottom
-                  >
-                    Message
-                  </Typography>
-                  <TextField
-                    id="message"
-                    placeholder="What's the character going to say?"
-                    multiline
-                    rows={5}
-                    fullWidth
-                    variant="outlined"
-                    value={message}
-                    onChange={handleMessageChange}
-                    onKeyDown={handleKeyDown}
-                    inputProps={{ 
-                      maxLength: 250,
-                      style: { 
-                        fontFamily: selectedFont,
-                        fontSize: `${fontSize}px`
-                      }
-                    }}
-                    sx={{
-                      '& .MuiInputBase-input': {
-                        fontFamily: selectedFont,
-                        caretColor: 'auto', // Add this to ensure cursor is visible
-                      }
-                    }}
-                    // Add this to control cursor position
-                    onSelect={(e) => {
-                      setCursorPosition(e.target.selectionStart);
+  if (isLoading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  if (!config) {
+    return <Typography>Error loading configuration</Typography>;
+  }
+
+  return (
+    <Box display="flex" flexDirection="column" height="100vh">
+      <AppContainer>
+        <Box
+          sx={{
+            backgroundColor: "background.paper",
+            position: "sticky",
+            pb: 2,
+          }}
+        >
+          {/* Preview Container at the top */}
+          <PreviewContainer>
+            <Tabs
+              value={previewTab}
+              onChange={(e, newValue) => setPreviewTab(newValue)}
+              centered
+              sx={{ mb: 0 }}
+            >
+              <Tab label="Image Editor" />
+              <Tab label="GIF Generator (beta)" />
+            </Tabs>
+
+            {/* Image Preview Tab */}
+            {previewTab === 0 && (
+              <Box>
+                {imageData ? (
+                  <img
+                    src={imageData}
+                    alt="Rendered output"
+                    width={608}
+                    height={128}
+                    style={{
+                      imageRendering: "pixelated",
+                      border: "1px solid #000",
                     }}
                   />
-                </Box>
-
-                {/* Font controls below message */}
-                <Box mb={3}>
-                  <Typography variant="h5" gutterBottom>
-                    Font Settings
-                  </Typography>
-                  <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel id="font-selector-label">Font Style</InputLabel>
-                    <Select
-                      labelId="font-selector-label"
-                      id="font-selector"
-                      value={selectedFont}
-                      label="Font Style"
-                      onChange={handleFontChange}
+                ) : (
+                  <Skeleton width={608} height={128} />
+                )}
+                <Box
+                  sx={{
+                    mt: 2,
+                    position: "sticky",
+                    bottom: 0,
+                    backgroundColor: "background.paper",
+                    py: 1,
+                  }}
+                >
+                  <ButtonGroup>
+                    <Button
+                      startIcon={<ContentCopyIcon />}
+                      onClick={handleCopyImage}
+                      disabled={!imageData}
                     >
-                      {config.fonts.map((font) => (
-                        <MenuItem
-                          key={font.name}
-                          value={font.name}
-                          style={{ 
-                            fontFamily: font.name === 'Terminus' ? 'Terminus' : font.name 
+                      Copy Image
+                    </Button>
+                    <Button
+                      startIcon={<DownloadIcon />}
+                      onClick={handleDownload}
+                      disabled={!imageData}
+                    >
+                      Download Image
+                    </Button>
+                  </ButtonGroup>
+                </Box>
+              </Box>
+            )}
+
+            {/* GIF Preview Tab */}
+            {previewTab === 1 && (
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                {isGeneratingGif ? (
+                  <>
+                    <Skeleton variant="rectangular" width={608} height={128} />
+                    <Box sx={{ width: "100%", mt: 2 }}>
+                      <LinearProgress
+                        variant="determinate"
+                        value={gifProgress}
+                      />
+                      <Typography variant="caption" sx={{ mt: 1 }}>
+                        {Math.round(gifProgress)}% - Processing frames...
+                      </Typography>
+                    </Box>
+                  </>
+                ) : generatedGif ? (
+                  <>
+                    <Image
+                      src={generatedGif}
+                      alt="Generated GIF"
+                      width={608}
+                      height={128}
+                      style={{
+                        imageRendering: "pixelated",
+                        border: "1px solid #000",
+                      }}
+                      unoptimized
+                    />
+                    <Box
+                      sx={{
+                        mt: 2,
+                        position: "sticky",
+                        bottom: 0,
+                        backgroundColor: "background.paper",
+                        py: 1,
+                      }}
+                    >
+                      <ButtonGroup>
+                        <Button
+                          startIcon={<DownloadIcon />}
+                          onClick={() => {
+                            const link = document.createElement("a");
+                            link.href = generatedGif;
+                            link.download = "dialogue-animation.gif";
+                            link.click();
                           }}
                         >
-                          {font.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                          Download GIF
+                        </Button>
+                        <Button
+                          startIcon={<ContentCopyIcon />}
+                          onClick={() =>
+                            navigator.clipboard.writeText(generatedGif)
+                          }
+                        >
+                          Copy GIF URL
+                        </Button>
+                        <Button
+                          startIcon={<RefreshRounded />} // Add a refresh icon
+                          onClick={handleGenerateGif}
+                        >
+                          Regenerate GIF
+                        </Button>
+                      </ButtonGroup>
+                    </Box>
+                  </>
+                ) : (
+                  <Button
+                    variant="contained"
+                    onClick={handleGenerateGif}
+                    disabled={isGeneratingGif || !message}
+                    sx={{ mt: 2 }}
+                  >
+                    Generate GIF
+                  </Button>
+                )}
+              </Box>
+            )}
+          </PreviewContainer>
+        </Box>
 
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={useMask}
-                        onChange={handleMaskToggle}
-                        name="useMask"
-                      />
-                    }
-                    label="Use Mask"
-                  />
-                </Box>
-              </Grid>
-              {/* Backgrounds Column */}
-              <Grid item xs={12} md={3}>
-                <Typography variant="h5" gutterBottom>
-                  Backgrounds
-                </Typography>
-                {backgroundSelection}
-              </Grid>
-            </Grid>
+        <ContentContainer sx={contentContainerStyles}>
+          <InterfaceBox>
+            <TextField
+              label="Message"
+              multiline
+              rows={5}
+              value={message}
+              onChange={handleMessageChange}
+              onKeyDown={handleKeyDown}
+              fullWidth
+              variant="outlined"
+              margin="normal"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={useMask}
+                  onChange={handleMaskToggle}
+                  color="primary"
+                />
+              }
+              label="Use Mask"
+            />
+            <FormControl fullWidth variant="outlined" margin="normal">
+              <InputLabel>Font</InputLabel>
+              <Select
+                value={selectedFont}
+                onChange={handleFontChange}
+                label="Font"
+              >
+                {config.fonts.map((font) => (
+                  <MenuItem key={font.name} value={font.name}>
+                    {font.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {characterAccordions}
+            {customAccordion}
+            {backgroundSelection}
           </InterfaceBox>
+          <OutputBox>
+            <canvas
+              ref={canvasRef}
+              width={608}
+              height={128}
+              style={{ display: "none" }}
+            />
+          </OutputBox>
         </ContentContainer>
-      </OutputBox>
-      {/* Error Modal */}
+      </AppContainer>
       <Modal
-        isOpen={error}
+        isOpen={isErrorModalOpen}
         onClose={handleCloseError}
-        title="Error!"
+        title="Error"
         content={errorMessage}
-        icon="Error"
-        buttons={[{ label: "Discard", onClick: handleCloseError }]}
+        buttons={[
+          {
+            label: "Close",
+            onClick: handleCloseError,
+            variant: "contained",
+          },
+        ]}
       />
-    </AppContainer>
+    </Box>
   );
 }
 

@@ -284,12 +284,12 @@
     {
       "name": "Arial",
       "file": null,
-      "charLimit": 40
+      "charLimit": 27
     },
     {
       "name": "Courier New",
       "file": null,
-      "charLimit": 35
+      "charLimit": 25
     }
   ]
 }
