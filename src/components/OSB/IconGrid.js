@@ -4,7 +4,7 @@ import { Box, Typography, Tooltip } from "@mui/material";
 import { Rnd } from "react-rnd";
 import { apps } from "@/config/apps";
 import { ThemeContext } from "./Theme";
-import { isDebugModeEnabled } from './Theme';
+import { isDebugModeEnabled } from "./Theme";
 import Image from "next/image";
 
 const GRID_SIZE = 80;
@@ -44,15 +44,15 @@ const generateInitialLayout = (apps) => {
 const IconGrid = ({ onLaunchApp }) => {
   // Replace context usage with direct localStorage check
   const [debugMode, setDebugMode] = useState(() => isDebugModeEnabled());
-  
+
   // Update debugMode when localStorage changes
   useEffect(() => {
     const handleStorageChange = () => {
       setDebugMode(isDebugModeEnabled());
     };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const [layout, setLayout] = useState(() => {
@@ -63,39 +63,51 @@ const IconGrid = ({ onLaunchApp }) => {
         // Validate saved positions are still valid
         return parsedLayout.map((item) => ({
           ...item,
-          x: Math.max(0, Math.min(snapToGrid(item.x), window.innerWidth - ICON_WIDTH)),
-          y: Math.max(0, Math.min(snapToGrid(item.y), window.innerHeight - ICON_HEIGHT)),
+          x: Math.max(
+            0,
+            Math.min(snapToGrid(item.x), window.innerWidth - ICON_WIDTH)
+          ),
+          y: Math.max(
+            0,
+            Math.min(snapToGrid(item.y), window.innerHeight - ICON_HEIGHT)
+          ),
         }));
       }
     } catch (e) {
       console.error("Failed to load layout:", e);
     }
     // Filter apps based on debug mode before generating initial layout
-    const visibleApps = apps.filter(app => !app.debug || debugMode);
+    const visibleApps = apps.filter((app) => !app.debug || debugMode);
     return generateInitialLayout(visibleApps);
   });
 
   // Filter apps based on debug mode
-  const visibleApps = apps.filter(app => !app.debug || debugMode);
+  const visibleApps = apps.filter((app) => !app.debug || debugMode);
 
   // Add effect to handle layout updates when debug mode changes
   useEffect(() => {
-    const currentAppIds = visibleApps.map(app => app.id);
-    const filteredLayout = layout.filter(item => currentAppIds.includes(item.id));
-    
-    // Add new apps to layout if they don't exist
-    const newApps = visibleApps.filter(app => 
-      !layout.some(item => item.id === app.id)
+    const currentAppIds = visibleApps.map((app) => app.id);
+    const filteredLayout = layout.filter((item) =>
+      currentAppIds.includes(item.id)
     );
-    
+
+    // Add new apps to layout if they don't exist
+    const newApps = visibleApps.filter(
+      (app) => !layout.some((item) => item.id === app.id)
+    );
+
     if (newApps.length > 0) {
-      const existingPositions = filteredLayout.map(item => ({ x: item.x, y: item.y }));
+      const existingPositions = filteredLayout.map((item) => ({
+        x: item.x,
+        y: item.y,
+      }));
       const newLayout = [...filteredLayout];
-      
-      newApps.forEach(app => {
+
+      newApps.forEach((app) => {
         // Find first available position
-        let x = 0, y = 0;
-        while (existingPositions.some(pos => pos.x === x && pos.y === y)) {
+        let x = 0,
+          y = 0;
+        while (existingPositions.some((pos) => pos.x === x && pos.y === y)) {
           x += GRID_SIZE;
           if (x >= window.innerWidth - ICON_WIDTH) {
             x = 0;
@@ -105,7 +117,7 @@ const IconGrid = ({ onLaunchApp }) => {
         newLayout.push({ id: app.id, x, y });
         existingPositions.push({ x, y });
       });
-      
+
       setLayout(newLayout);
     } else if (filteredLayout.length !== layout.length) {
       setLayout(filteredLayout);
@@ -227,7 +239,6 @@ const IconItem = React.memo(
               draggable={false}
               style={{ width: 48, height: 48, pointerEvents: "none" }}
             />
-
           </Box>
         </Tooltip>
       </Rnd>
