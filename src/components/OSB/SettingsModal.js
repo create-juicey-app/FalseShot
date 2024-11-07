@@ -32,6 +32,7 @@ import {
   WallpaperRounded,
   Texture,
   FormatColorFill,
+  Code, // Add this import
 } from "@mui/icons-material";
 import { ThemeContext } from "./Theme";
 import TabPanel from "./TabPanel";
@@ -109,6 +110,7 @@ const ModeIcon = styled(Box)(({ theme }) => ({
 
 const SettingsModal = ({ open, onClose }) => {
   const [tab, setTab] = useState(0);
+  const [showReloadPrompt, setShowReloadPrompt] = useState(false);
   const {
     currentTheme,
     setCurrentTheme,
@@ -120,15 +122,32 @@ const SettingsModal = ({ open, onClose }) => {
     setAnimationSpeed,
     themes,
     getCurrentTheme,
+    debugMode,
+    setDebugMode,
   } = useContext(ThemeContext);
 
   // Use the custom hook instead of direct context access
-  const { currentPattern, setCurrentPattern, patterns } = usePattern();
-  const { mode, setMode, backgroundImage, handleImageUpload, backgroundColor, setBackgroundColor } = useBackground();
+  const { 
+    mode, 
+    setMode, 
+    currentPattern,
+    setCurrentPattern,
+    patterns,
+    backgroundImage,
+    handleImageUpload,
+    setBackgroundImage,  // Add this
+    backgroundColor,
+    setBackgroundColor 
+  } = useBackground();
   const activeTheme = getCurrentTheme();
 
   const handleTabChange = (event, newValue) => {
     setTab(newValue);
+  };
+
+  const handleDebugModeChange = (e) => {
+    setDebugMode(e.target.checked);
+    setShowReloadPrompt(true);
   };
 
   // Check if required context values are available
@@ -169,6 +188,7 @@ const SettingsModal = ({ open, onClose }) => {
           <Tab icon={<Wallpaper />} label="Background" />
           <Tab icon={<Dashboard />} label="Taskbar" />
           <Tab icon={<Animation />} label="Animations" />
+          <Tab icon={<Code />} label="Advanced" />
         </Tabs>
       </Box>
 
@@ -418,10 +438,7 @@ const SettingsModal = ({ open, onClose }) => {
                     >
                       <Button
                         variant="contained"
-                        onClick={() => {
-                          setBackgroundImage(null);
-                          document.getElementById('background-image-upload').value = '';
-                        }}
+                        onClick={() => setBackgroundImage(null)}
                         color="error"
                       >
                         Remove Image
@@ -547,6 +564,49 @@ const SettingsModal = ({ open, onClose }) => {
                 <MenuItem value="normal">Normal</MenuItem>
                 <MenuItem value="fast">Fast</MenuItem>
               </Select>
+            </Grid>
+          </Grid>
+        </TabPanel>
+
+        <TabPanel value={tab} index={4}>
+          <Typography variant="h6" gutterBottom>
+            Advanced Settings
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={debugMode}
+                    onChange={handleDebugModeChange}
+                  />
+                }
+                label="Debug Mode"
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Enables error reporting and shows debug applications
+              </Typography>
+              {showReloadPrompt && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+                  <Typography color="warning.main" gutterBottom>
+                    Debug mode change requires a page reload to take effect.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => window.location.reload()}
+                    sx={{ mr: 1 }}
+                  >
+                    Reload Now
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setShowReloadPrompt(false)}
+                  >
+                    Later
+                  </Button>
+                </Box>
+              )}
             </Grid>
           </Grid>
         </TabPanel>

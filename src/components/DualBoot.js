@@ -4,8 +4,10 @@ import { styled } from "@mui/system";
 import Desktop from "./OSA/Desktop";
 import TextEditor from "./OSB/Desktop";
 import BootSequence from "./OSA/BootSequence";
-import { ThemeProviderCustom } from "./OSB/Theme";
+import { ThemeProviderCustom } from "./OSB/Theme"; // Remove useTheme import
 import { WindowManagerProvider } from "./OSB/contexts/WindowManagerContext";
+import { isDebugModeEnabled } from './OSB/Theme'; // Add isDebugModeEnabled import
+
 const ConsoleContainer = styled(Box)({
   minHeight: "100vh",
   backgroundColor: "#000000 !important",
@@ -63,6 +65,19 @@ const OSSelectionLanding = ({
   onThemeModeChangeB,
   onPrimaryColorChangeB,
 }) => {
+  // Replace the useTheme hook usage with direct localStorage check
+  const [debugMode, setDebugMode] = useState(() => isDebugModeEnabled());
+  
+  // Update debugMode when localStorage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setDebugMode(isDebugModeEnabled());
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const [selectedOS, setSelectedOS] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -103,6 +118,13 @@ const OSSelectionLanding = ({
     return () => clearTimeout(timer);
   }, []);
 
+  // Automatically boot into JuicedOS when debug mode is off
+  useEffect(() => {
+    if (!debugMode) {
+      handleOSSelect("alternative");
+    }
+  }, [debugMode]);
+
   const handleOSSelect = async (os) => {
     setIsBooting(true);
 
@@ -125,15 +147,19 @@ const OSSelectionLanding = ({
     setSelectedOS(os);
   };
 
+  // Modify handleKeyDown to handle only visible options
   const handleKeyDown = (e) => {
     if (isBooting) return;
 
     if (e.key === "ArrowUp") {
       setSelectedIndex((prev) => Math.max(0, prev - 1));
     } else if (e.key === "ArrowDown") {
-      setSelectedIndex((prev) => Math.min(1, prev + 1));
+      // Only allow moving down if TWM is visible (debug mode)
+      if (debugMode) {
+        setSelectedIndex((prev) => Math.min(1, prev + 1));
+      }
     } else if (e.key === "Enter") {
-      handleOSSelect(selectedIndex === 0 ? "twm" : "alternative");
+      handleOSSelect(selectedIndex === 0 ? "alternative" : "twm");
     }
   };
 
@@ -176,7 +202,7 @@ const OSSelectionLanding = ({
   return (
     <ConsoleContainer>
       <Box sx={{ mb: 10 }}>
-        {showPrompt && !isBooting && (
+        {showPrompt && !isBooting && debugMode && ( // Only show prompt if debug mode is enabled
           <Box sx={{ mt: 4, mb: 4 }}>
             <YellowText variant="body1" sx={{ mb: 2 }}>
               Please select an operating system:
@@ -184,16 +210,16 @@ const OSSelectionLanding = ({
 
             <MenuOption
               selected={selectedIndex === 0}
-              onClick={() => !isBooting && handleOSSelect("twm")}
+              onClick={() => !isBooting && handleOSSelect("alternative")}
             >
-              {selectedIndex === 0 ? ">" : " "} TWM OS
+              {selectedIndex === 0 ? ">" : " "} Juiced OS
             </MenuOption>
 
             <MenuOption
               selected={selectedIndex === 1}
-              onClick={() => !isBooting && handleOSSelect("alternative")}
+              onClick={() => !isBooting && handleOSSelect("twm")}
             >
-              {selectedIndex === 1 ? ">" : " "} Juiced OS
+              {selectedIndex === 1 ? ">" : " "} TWM OS
             </MenuOption>
 
             <GrayText variant="body2" sx={{ mt: 2 }}>
@@ -202,9 +228,12 @@ const OSSelectionLanding = ({
           </Box>
         )}
 
-        <GrayText variant="body2" sx={{ mt: 4 }}>
-          Press F12 for boot options | ESC for BIOS
-        </GrayText>
+        {/* Only show boot options text if in debug mode */}
+        {debugMode && (
+          <GrayText variant="body2" sx={{ mt: 4 }}>
+            Press F12 for boot options | ESC for BIOS
+          </GrayText>
+        )}
       </Box>
 
       {isBooting && (

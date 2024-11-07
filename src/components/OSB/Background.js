@@ -62,6 +62,13 @@ export const BackgroundProvider = ({ children }) => {
   const [backgroundImage, setBackgroundImage] = useState(() => loadSetting(STORAGE_KEYS.IMAGE, null));
   const [backgroundColor, setBackgroundColor] = useState(() => loadSetting(STORAGE_KEYS.COLOR, '#000000'));
 
+  // Add this effect to clear backgroundImage from storage when it's set to null
+  useEffect(() => {
+    if (backgroundImage === null) {
+      localStorage.removeItem(STORAGE_KEYS.IMAGE);
+    }
+  }, [backgroundImage]);
+
   // Save settings when they change
   useEffect(() => {
     saveSetting(STORAGE_KEYS.MODE, mode);
@@ -160,7 +167,7 @@ export const useBackground = () => {
     isDarkMode
   );
 
-  // Helper function to handle image upload
+  // Handle null background image properly
   const handleImageUpload = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();

@@ -12,7 +12,7 @@ import { useWindowManager } from "./contexts/WindowManagerContext";
 import { Rnd } from "react-rnd";
 
 const Taskbar = () => {
-  const { windows, activeWindow, focusWindow, openWindow } = useWindowManager();
+  const { windows, activeWindow, focusWindow, openWindow, updateWindow } = useWindowManager();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { currentTheme, taskbarSettings, animationSpeed, themes } =
     useContext(ThemeContext);
@@ -110,7 +110,12 @@ const Taskbar = () => {
                   <Button
                     variant={activeWindow === id ? "contained" : "text"}
                     size="small"
-                    onClick={() => focusWindow(id)}
+                    onClick={() => {
+                      if (window.isMinimized) {
+                        updateWindow(id, { isMinimized: false });
+                      }
+                      focusWindow(id);
+                    }}
                     sx={{
                       color: "white",
                       minWidth: "160px",

@@ -28,6 +28,8 @@ export const ThemeContext = createContext({
   getCurrentTheme: () => {},
   scale: 1,
   setScale: () => {},
+  debugMode: false,
+  setDebugMode: () => {},
 });
 
 // Add these utility functions at the top after imports
@@ -37,6 +39,7 @@ const STORAGE_KEYS = {
   TASKBAR: 'osb-taskbar',
   ANIMATION: 'osb-animation',
   SCALE: 'osb-scale',
+  DEBUG_MODE: 'osb-debug-mode',
 };
 
 const loadSetting = (key, defaultValue) => {
@@ -48,6 +51,18 @@ const loadSetting = (key, defaultValue) => {
 const saveSetting = (key, value) => {
   if (typeof window === 'undefined') return;
   localStorage.setItem(key, JSON.stringify(value));
+};
+
+// Add this updated utility function
+export const isDebugModeEnabled = () => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const debugMode = window.localStorage.getItem(STORAGE_KEYS.DEBUG_MODE);
+    return debugMode ? JSON.parse(debugMode) : false;
+  } catch (e) {
+    console.error('Failed to read debug mode from localStorage:', e);
+    return false;
+  }
 };
 
 // Reduced, more focused color palette with carefully selected base colors
@@ -178,6 +193,9 @@ export const ThemeProviderCustom = ({ children }) => {
   const [scale, setScale] = useState(() => 
     loadSetting(STORAGE_KEYS.SCALE, 1)
   );
+  const [debugMode, setDebugMode] = useState(() => 
+    loadSetting(STORAGE_KEYS.DEBUG_MODE, false)
+  );
 
   // Add effect hooks to save settings when they change
   useEffect(() => {
@@ -200,6 +218,10 @@ export const ThemeProviderCustom = ({ children }) => {
     saveSetting(STORAGE_KEYS.SCALE, scale);
     document.documentElement.style.zoom = scale;
   }, [scale]);
+
+  useEffect(() => {
+    saveSetting(STORAGE_KEYS.DEBUG_MODE, debugMode);
+  }, [debugMode]);
 
   const muiTheme = useMemo(() => {
     const activeTheme = baseThemes[currentTheme];
@@ -268,8 +290,10 @@ export const ThemeProviderCustom = ({ children }) => {
       },
       scale,
       setScale,
+      debugMode,
+      setDebugMode,
     }),
-    [currentTheme, isDarkMode, taskbarSettings, animationSpeed, scale]
+    [currentTheme, isDarkMode, taskbarSettings, animationSpeed, scale, debugMode]
   );
 
   return (

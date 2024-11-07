@@ -111,7 +111,6 @@ const Window = ({
     <Rnd
       position={position}
       size={windowSize}
-      onDragStart={focusWindow}
       onDragStop={(e, d) => {
         setPosition({ x: d.x, y: d.y });
       }}

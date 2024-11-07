@@ -28,6 +28,8 @@ const Window = ({
   zIndex = 1000,
   isMaximized = false,
   isMinimized = false,
+  isShaking = false,
+  aggressiveness = 1, // Add aggressiveness prop with default value
 }) => {
   const theme = useTheme();
   const { updateWindow, closeWindow, focusWindow } = useWindowManager();
@@ -36,6 +38,8 @@ const Window = ({
   // Add state to store previous size and position
   const [prevSize, setPrevSize] = useState(size);
   const [prevPosition, setPrevPosition] = useState(position);
+  const [shakeAnimation, setShakeAnimation] = useState({});
+  const [shakeTransition, setShakeTransition] = useState({});
 
   useEffect(() => {
     return () => {
@@ -44,6 +48,83 @@ const Window = ({
       }
     };
   }, [content]);
+
+  useEffect(() => {
+    if (isShaking) {
+      if (aggressiveness >= 3 && aggressiveness <= 4) {
+        // Generate random positions
+        const shakeKeyframesX = [];
+        const shakeKeyframesY = [];
+        const amplitude = aggressiveness === 3 ? 30 : 50;
+        const steps = 10;
+        for (let i = 0; i <= steps; i++) {
+          shakeKeyframesX.push((Math.random() - 0.5) * amplitude * 2);
+          shakeKeyframesY.push((Math.random() - 0.5) * amplitude * 2);
+        }
+        // Set the animation
+        setShakeAnimation({
+          x: shakeKeyframesX,
+          y: shakeKeyframesY,
+        });
+        setShakeTransition({
+          duration: 0.6,
+          ease: "easeInOut",
+        });
+      } else if (aggressiveness <= 2) {
+        // Levels 1 and 2
+        setShakeAnimation(getShakeAnimation(aggressiveness));
+        setShakeTransition(getShakeTransition(aggressiveness));
+      }
+      // Level 5 is handled in Desktop.js
+    }
+  }, [isShaking, aggressiveness]);
+
+  useEffect(() => {
+    if (isShaking) {
+      const timer = setTimeout(() => {
+        if (aggressiveness >= 3 && aggressiveness <= 4) {
+          // Update window position to last shake position
+          const lastX =
+            shakeAnimation.x && shakeAnimation.x.length > 0
+              ? shakeAnimation.x[shakeAnimation.x.length - 1]
+              : 0;
+          const lastY =
+            shakeAnimation.y && shakeAnimation.y.length > 0
+              ? shakeAnimation.y[shakeAnimation.y.length - 1]
+              : 0;
+          
+          updateWindow(id, {
+            isShaking: false,
+            aggressiveness: 1,
+            position: {
+              x: position.x + lastX,
+              y: position.y + lastY,
+            },
+          });
+        } else {
+          // Levels 1 and 2
+          updateWindow(id, { isShaking: false, aggressiveness: 1 });
+        }
+      }, shakeTransition.duration * 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isShaking, aggressiveness, id, updateWindow, position, shakeAnimation, shakeTransition]);
+
+  // Modify getShakeAnimation to exclude levels 3 and above
+  const getShakeAnimation = (level) => {
+    switch (level) {
+      case 1:
+        return { x: [-5, 5, -5, 5, 0] };
+      case 2:
+        return { x: [-10, 10, -10, 10, -5, 5, 0] };
+      default:
+        return {};
+    }
+  };
+
+  const getShakeTransition = (level) => {
+    return { duration: 0.5 };
+  };
 
   const handleMaximize = () => {
     if (!isMaximized) {
@@ -66,8 +147,6 @@ const Window = ({
     }
   };
 
-  if (isMinimized) return null;
-
   // Adjust currentSize and currentPosition to always use size and position
   const currentSize = size;
   const currentPosition = position;
@@ -80,7 +159,7 @@ const Window = ({
       minWidth={200}
       minHeight={150}
       bounds="parent"
-      style={{ zIndex }}
+      style={{ zIndex, display: isMinimized ? 'none' : 'block' }}
       enableResizing={!isMaximized && {
         top: true,
         right: true,
@@ -106,12 +185,18 @@ const Window = ({
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ 
-          duration: 0.2,
-          ease: "easeOut"
-        }}
+        animate={
+          isShaking
+            ? {
+                opacity: 1,
+                scale: 1,
+                ...shakeAnimation,
+              }
+            : { opacity: 1, scale: 1 }
+        }
+        transition={
+          isShaking ? shakeTransition : { duration: 0.2, ease: "easeOut" }
+        }
         style={{ width: "100%", height: "100%" }}
       >
         <Paper

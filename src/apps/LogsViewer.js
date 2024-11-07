@@ -14,7 +14,10 @@ const ErrorLogs = () => {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
+    console.log("Fetching logs...", Date.now());
     fetchLogs();
+    console.log("Finished fucksdqmlfkzlfkzklmf logs...", Date.now());
+    
   }, []);
 
   const fetchLogs = async () => {

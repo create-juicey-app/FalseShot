@@ -77,4 +77,16 @@ export const apps = [
       height: 500,
     },
   },
+  {
+    id: "windowtester",
+    label: "Window Tester",
+    icon: "/oneshot.png",
+    filename: "WindowTester",
+    debug: true, // Add debug flag
+    componentProps: {},
+    windowProps: {
+      width: 400,
+      height: 300,
+    },
+  },
 ];

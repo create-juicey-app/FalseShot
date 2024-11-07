@@ -23,6 +23,7 @@ const WindowManager = () => {
             key={windowConfig.id}
             {...windowConfig}
             zIndex={windowConfig.zIndex} // Pass zIndex prop
+            aggressiveness={windowConfig.aggressiveness || 1} // Pass aggressiveness prop
             onClose={() => closeWindow(windowConfig.id)}
             onMinimize={() =>
               updateWindow(windowConfig.id, { isMinimized: true })

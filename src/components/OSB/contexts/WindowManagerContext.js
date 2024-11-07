@@ -11,6 +11,7 @@ const initialState = {
   windows: {},
   activeWindowId: null,
   zIndexCounter: 1000,
+  isScreenShaking: false, // Add global screen shaking state
 };
 
 const windowReducer = (state, action) => {
@@ -68,6 +69,31 @@ const windowReducer = (state, action) => {
         zIndexCounter: state.zIndexCounter + 1,
       };
 
+    case "SHAKE_WINDOW":
+      if (action.payload.aggressiveness === 5) {
+        return {
+          ...state,
+          isScreenShaking: true, // Trigger global screen shaking
+        };
+      } else {
+        return {
+          ...state,
+          windows: {
+            ...state.windows,
+            [action.payload.id]: {
+              ...state.windows[action.payload.id],
+              isShaking: true,
+              aggressiveness: action.payload.aggressiveness, // Store aggressiveness level
+            },
+          },
+        };
+      }
+    case "RESET_SCREEN_SHAKE":
+      return {
+        ...state,
+        isScreenShaking: false, // Reset global screen shaking
+      };
+
     default:
       return state;
   }
@@ -92,6 +118,30 @@ export const WindowManagerProvider = ({ children }) => {
     dispatch({ type: "FOCUS_WINDOW", payload: windowId });
   }, []);
 
+  // Add utility functions
+  const maximizeWindow = useCallback((windowId) => {
+    updateWindow(windowId, { isMaximized: true, isMinimized: false });
+  }, [updateWindow]);
+
+  const minimizeWindow = useCallback((windowId) => {
+    updateWindow(windowId, { isMinimized: true, isMaximized: false });
+  }, [updateWindow]);
+
+  const shakeWindow = useCallback((windowId, aggressiveness = 1) => {
+    dispatch({ type: "SHAKE_WINDOW", payload: { id: windowId, aggressiveness } });
+
+    if (aggressiveness === 5) {
+      // Reset the screen shaking after the animation completes
+      setTimeout(() => {
+        dispatch({ type: "RESET_SCREEN_SHAKE" });
+      }, 600); // Duration matching the animation
+    }
+  }, []);
+
+  const createWindow = useCallback((windowConfig) => {
+    openWindow(windowConfig);
+  }, [openWindow]);
+
   return (
     <WindowManagerContext.Provider
       value={{
@@ -101,6 +151,11 @@ export const WindowManagerProvider = ({ children }) => {
         closeWindow,
         updateWindow,
         focusWindow,
+        maximizeWindow,
+        minimizeWindow,
+        shakeWindow,
+        createWindow,
+        isScreenShaking: state.isScreenShaking, // Expose isScreenShaking
       }}
     >
       {children}
