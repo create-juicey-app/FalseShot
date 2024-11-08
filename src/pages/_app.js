@@ -1,8 +1,9 @@
-import '@/styles/App.css';
-import '@/styles/globals.css'
-import React from 'react';
-import App from 'next/app';
-import Bsod from '../components/Bsod';
+import "@/styles/App.css";
+import "@/styles/globals.css";
+import React from "react";
+import App from "next/app";
+import Bsod from "../components/Bsod";
+import { Analytics } from "@vercel/analytics/react";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -36,14 +37,17 @@ class ErrorBoundary extends React.Component {
 class MyApp extends App {
   render() {
     const { Component, pageProps, router } = this.props;
-    
+
     // Check if the current route is an in-app route
-    const isInApp = router.pathname.startsWith('/app/');
+    const isInApp = router.pathname.startsWith("/app/");
 
     return (
-      <ErrorBoundary isInApp={isInApp}>
-        <Component {...pageProps} />
-      </ErrorBoundary>
+      <>
+        <Analytics />
+        <ErrorBoundary isInApp={isInApp}>
+          <Component {...pageProps} />
+        </ErrorBoundary>
+      </>
     );
   }
 }

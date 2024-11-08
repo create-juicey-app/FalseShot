@@ -45,28 +45,38 @@ import gifshot from "gifshot"; // Add gifshot import at the top
 import { RefreshRounded } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search"; // Add this import
 // Styled Components
-// Update AppContainer to handle full height and scrolling
+// Update AppContainer to handle full width without margins
 const AppContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   minHeight: "100vh",
   maxHeight: "100vh",
+  width: "100vw",
+  margin: 0,
+  padding: 0,
   overflow: "hidden",
 }));
 
-// Update ContentContainer to handle scrolling properly
+// Update ContentContainer to use full width
 const ContentContainer = styled(Box)(({ theme }) => ({
   flex: 1,
+  width: "100%",
   overflowY: "auto",
   paddingTop: theme.spacing(2),
+  margin: 0,
+  "& > *": {
+    maxWidth: "100vw",
+    boxSizing: "border-box",
+  },
 }));
 
-// Update InterfaceBox to remove conflicting styles
+// Update InterfaceBox to use full width
 const InterfaceBox = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   width: "100%",
   maxWidth: "100%",
-  margin: "0 auto",
+  margin: 0,
+  boxSizing: "border-box",
 }));
 
 // Add SearchBox component
@@ -106,14 +116,44 @@ const globalStyles = css`
 const PreviewContainer = styled(Box)(({ theme }) => ({
   position: "sticky",
   top: 0,
-  zIndex: 100,
   width: "100%",
+  margin: 0,
+  padding: theme.spacing(2),
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  padding: theme.spacing(2),
   backgroundColor: theme.palette.background.paper,
   borderBottom: `1px solid ${theme.palette.divider}`,
+  boxSizing: "border-box",
+}));
+
+// Add new styled component for the grid layout
+const TwoColumnGrid = styled(Box)(({ theme }) => ({
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: theme.spacing(2),
+  width: "100%",
+  [theme.breakpoints.up("md")]: {
+    gridTemplateColumns: "50% 50%", // Change to equal width columns
+  },
+}));
+
+// Add styled components for the columns
+const CharacterColumn = styled(Box)(({ theme }) => ({
+  height: "100%",
+  width: "100%",
+  overflowY: "auto",
+  padding: theme.spacing(2),
+  borderRight: `1px solid ${theme.palette.divider}`,
+  boxSizing: "border-box", // Ensure padding is included in width calculation
+}));
+
+const ControlsColumn = styled(Box)(({ theme }) => ({
+  height: "100%",
+  width: "100%",
+  overflowY: "auto",
+  padding: theme.spacing(2),
+  boxSizing: "border-box", // Ensure padding is included in width calculation
 }));
 
 function App() {
@@ -1409,13 +1449,24 @@ function App() {
   }
 
   return (
-    <Box display="flex" flexDirection="column" height="100vh">
+    <Box
+      display="flex"
+      flexDirection="column"
+      height="100vh"
+      width="100vw"
+      m={0}
+      p={0}
+    >
       <AppContainer>
         <Box
           sx={{
             backgroundColor: "background.paper",
             position: "sticky",
-            pb: 2,
+            top: 0,
+            width: "100%",
+            margin: 0,
+            padding: theme.spacing(0, 0, 2, 0),
+            zIndex: 1,
           }}
         >
           {/* Preview Container at the top */}
@@ -1566,46 +1617,53 @@ function App() {
         </Box>
 
         <ContentContainer sx={contentContainerStyles}>
-          <InterfaceBox>
-            <TextField
-              label="Message"
-              multiline
-              rows={5}
-              value={message}
-              onChange={handleMessageChange}
-              onKeyDown={handleKeyDown}
-              fullWidth
-              variant="outlined"
-              margin="normal"
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useMask}
-                  onChange={handleMaskToggle}
-                  color="primary"
-                />
-              }
-              label="Use Mask"
-            />
-            <FormControl fullWidth variant="outlined" margin="normal">
-              <InputLabel>Font</InputLabel>
-              <Select
-                value={selectedFont}
-                onChange={handleFontChange}
-                label="Font"
-              >
-                {config.fonts.map((font) => (
-                  <MenuItem key={font.name} value={font.name}>
-                    {font.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {characterAccordions}
-            {customAccordion}
-            {backgroundSelection}
-          </InterfaceBox>
+          <TwoColumnGrid>
+            {/* Left Column - Characters */}
+            <CharacterColumn>
+              {characterAccordions}
+              {customAccordion}
+            </CharacterColumn>
+
+            {/* Right Column - Controls */}
+            <ControlsColumn>
+              <TextField
+                label="Message"
+                multiline
+                rows={5}
+                value={message}
+                onChange={handleMessageChange}
+                onKeyDown={handleKeyDown}
+                fullWidth
+                variant="outlined"
+                margin="normal"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={useMask}
+                    onChange={handleMaskToggle}
+                    color="primary"
+                  />
+                }
+                label="Use Mask"
+              />
+              <FormControl fullWidth variant="outlined" margin="normal">
+                <InputLabel>Font</InputLabel>
+                <Select
+                  value={selectedFont}
+                  onChange={handleFontChange}
+                  label="Font"
+                >
+                  {config.fonts.map((font) => (
+                    <MenuItem key={font.name} value={font.name}>
+                      {font.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {backgroundSelection}
+            </ControlsColumn>
+          </TwoColumnGrid>
           <OutputBox>
             <canvas
               ref={canvasRef}
