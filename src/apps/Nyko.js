@@ -32,6 +32,7 @@ import {
   Tab,
   LinearProgress,
   Skeleton, // Add this import
+  IconButton, // Add this import
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -44,6 +45,8 @@ import Image from "next/image"; // Change the import line
 import gifshot from "gifshot"; // Add gifshot import at the top
 import { RefreshRounded } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search"; // Add this import
+import VisibilityIcon from "@mui/icons-material/Visibility"; // Add this import
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"; // Add this import
 // Styled Components
 // Update AppContainer to handle full width without margins
 const AppContainer = styled(Box)(({ theme }) => ({
@@ -188,7 +191,9 @@ function App() {
   const [cursorPosition, setCursorPosition] = useState(0);
   const [previewTab, setPreviewTab] = useState(0);
   const [gifProgress, setGifProgress] = useState(0);
-
+  const [isPreviewVisible, setIsPreviewVisible] = useState(true); // Add this line
+  const [isGeneratingWebP, setIsGeneratingWebP] = useState(false); // Add this line
+  const [GeneratedWebP, setGeneratedWebP] = useState(null);
   const renderRef = useRef(null);
   const imageCache = useRef({});
 
@@ -1205,120 +1210,147 @@ function App() {
   );
 
   // Modify handleGenerateGif function
-  const handleGenerateGif = useCallback(async () => {
-    setIsGeneratingGif(true);
-    setGifProgress(0);
-    setGeneratedGif(null); // Reset previous GIF
-
-    try {
-      const lines = message.split("\n");
-      const frames = [];
-      const punctuationPauses = [".", "!", "?", ";", ","];
-      const pauseFrames = {
-        ".": 5,
-        "!": 5,
-        "?": 5,
-        ";": 3,
-        ",": 2,
-      };
-
-      let totalSteps = lines.reduce((acc, line) => acc + line.length, 0);
-      let currentStep = 0;
-
-      // Generate frames with optimizations
-      const baseFrame = await generateFrame(lines, 0, 0);
-      frames.push(baseFrame);
-      setGifProgress(5);
-
-      // Generate text animation frames
-      for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-        const line = lines[lineIndex];
-        for (let charIndex = 0; charIndex <= line.length; charIndex++) {
-          // Change increment from 2 to 1
-          const frame = await generateFrame(lines, lineIndex, charIndex);
-          frames.push(frame);
-
-          if (
-            charIndex > 0 &&
-            punctuationPauses.includes(line[charIndex - 1])
-          ) {
-            const pauseCount = pauseFrames[line[charIndex - 1]] || 1;
-            const pauseFrame = frames[frames.length - 1];
-            for (let i = 0; i < pauseCount; i++) {
-              frames.push(pauseFrame);
-            }
-          }
-
-          currentStep += 1; // Change increment from 2 to 1
-          setGifProgress(5 + (currentStep / totalSteps) * 70);
-        }
-      }
-
-      // Generate arrow animation frames
-      setGifProgress(75);
-      const arrowAnimationFrames = [];
-      const animationSteps = 15; // Keep the original steps
-
-      for (let i = 0; i < animationSteps; i++) {
-        const arrowOffset = -3 + Math.sin((i / animationSteps) * Math.PI) * 2;
-        const frameWithArrow = await generateFrame(
-          lines,
-          lines.length - 1,
-          lines[lines.length - 1].length,
-          arrowOffset,
-          true
-        );
-        arrowAnimationFrames.push(frameWithArrow);
-        setGifProgress(75 + (i / animationSteps) * 15);
-      }
-
-      // Add arrow animation cycles (increase to 10 times)
-      for (let cycle = 0; cycle < 10; cycle++) {
-        frames.push(...arrowAnimationFrames);
-      }
-
-      setGifProgress(90);
-
-      // Create GIF with optimized settings
-      const gifOptions = {
-        images: frames,
-        gifWidth: 608,
-        gifHeight: 128,
-        interval: 0.05, // Increase frame rate
-        numWorkers: 2,
-        quality: 5,
-        progressCallback: (captureProgress) => {
-          setGifProgress(90 + captureProgress * 10);
-        },
-      };
-
-      return new Promise((resolve, reject) => {
-        gifshot.createGIF(gifOptions, (result) => {
-          if (!result.error) {
-            setGeneratedGif(result.image);
-            setGifProgress(100);
-            setIsGeneratingGif(false);
-            resolve();
-          } else {
-            console.error("GIF generation error:", result.errorMsg);
-            setErrorMessage(`Failed to generate GIF: ${result.errorMsg}`);
-            setError(true);
-            setIsGeneratingGif(false);
-            setGifProgress(0);
-            reject(new Error(result.errorMsg));
-          }
-        });
-      });
-    } catch (error) {
-      console.error("GIF generation error:", error);
-      setErrorMessage(
-        `Failed to generate GIF: ${error.message || "Unknown error"}`
-      );
-      setError(true);
-      setIsGeneratingGif(false);
+  const handleGenerateAnimation = useCallback(
+    async (format) => {
+      if (!message) return;
+      setIsGeneratingGif(format === "gif");
+      setIsGeneratingWebP(format === "webp");
       setGifProgress(0);
-    }
-  }, [message, generateFrame]);
+      setGeneratedGif(null);
+      setGeneratedWebP(null); // Add this line
+
+      try {
+        const lines = message.split("\n");
+        const frames = [];
+        const punctuationPauses = [".", "!", "?", ";", ","];
+        const pauseFrames = {
+          ".": 5,
+          "!": 5,
+          "?": 5,
+          ";": 3,
+          ",": 2,
+        };
+
+        let totalSteps = lines.reduce((acc, line) => acc + line.length, 0);
+        let currentStep = 0;
+
+        // Generate frames with optimizations
+        const baseFrame = await generateFrame(lines, 0, 0);
+        frames.push(baseFrame);
+        setGifProgress(5);
+
+        // Generate text animation frames
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+          const line = lines[lineIndex];
+          for (let charIndex = 0; charIndex <= line.length; charIndex++) {
+            // Change increment from 2 to 1
+            const frame = await generateFrame(lines, lineIndex, charIndex);
+            frames.push(frame);
+
+            if (
+              charIndex > 0 &&
+              punctuationPauses.includes(line[charIndex - 1])
+            ) {
+              const pauseCount = pauseFrames[line[charIndex - 1]] || 1;
+              const pauseFrame = frames[frames.length - 1];
+              for (let i = 0; i < pauseCount; i++) {
+                frames.push(pauseFrame);
+              }
+            }
+
+            currentStep += 1; // Change increment from 2 to 1
+            setGifProgress(5 + (currentStep / totalSteps) * 70);
+          }
+        }
+
+        // Generate arrow animation frames
+        setGifProgress(75);
+        const arrowAnimationFrames = [];
+        const animationSteps = 15; // Keep the original steps
+
+        for (let i = 0; i < animationSteps; i++) {
+          const arrowOffset = -3 + Math.sin((i / animationSteps) * Math.PI) * 2;
+          const frameWithArrow = await generateFrame(
+            lines,
+            lines.length - 1,
+            lines[lines.length - 1].length,
+            arrowOffset,
+            true
+          );
+          arrowAnimationFrames.push(frameWithArrow);
+          setGifProgress(75 + (i / animationSteps) * 15);
+        }
+
+        // Add arrow animation cycles (increase to 10 times)
+        for (let cycle = 0; cycle < 10; cycle++) {
+          frames.push(...arrowAnimationFrames);
+        }
+
+        setGifProgress(90);
+
+        // Create GIF with optimized settings
+        const blob = await createAnimationBlob(frames, format); // Modify this line
+        const animationUrl = URL.createObjectURL(blob);
+
+        if (format === "gif") {
+          setGeneratedGif(animationUrl);
+        } else if (format === "webp") {
+          setGeneratedWebP(animationUrl); // Add this line
+        }
+        setGifProgress(100);
+        setIsGeneratingGif(false);
+        setIsGeneratingWebP(false);
+      } catch (error) {
+        console.error("GIF generation error:", error);
+        setErrorMessage(`Failed to generate GIF: ${error.message}`);
+        setError(true);
+        setIsGeneratingGif(false);
+        setIsGeneratingWebP(false);
+        setGifProgress(0);
+      }
+    },
+    [message, generateFrame]
+  );
+
+  // Add a function to create animation blob in the desired format
+  const createAnimationBlob = async (frames, format) => {
+    return new Promise((resolve, reject) => {
+      gifshot.createGIF(
+        {
+          images: frames,
+          gifWidth: 608,
+          gifHeight: 128,
+          numFrames: frames.length,
+          frameDuration: 1,
+          sampleInterval: 10,
+          numWorkers: 2,
+          // Add 'format' option
+          format: format === "webp" ? "image/webp" : "image/gif",
+        },
+        (obj) => {
+          if (!obj.error) {
+            const image = obj.image;
+            const binary = atob(image.replace(/^data:image\/\w+;base64,/, ""));
+            const array = [];
+            for (let i = 0; i < binary.length; i++) {
+              array.push(binary.charCodeAt(i));
+            }
+            const blob = new Blob([new Uint8Array(array)], {
+              type: format === "webp" ? "image/webp" : "image/gif",
+            });
+            resolve(blob);
+          } else {
+            reject(obj.error);
+          }
+        }
+      );
+    });
+  };
+
+  // Add a toggle function for the preview tab
+  const handleTogglePreview = () => {
+    setIsPreviewVisible((prev) => !prev);
+  };
 
   const renderPreview = () => (
     <PreviewContainer>
@@ -1410,7 +1442,7 @@ function App() {
                 </Button>
                 <Button
                   startIcon={<RefreshRounded />} // Add a refresh icon
-                  onClick={handleGenerateGif}
+                  onClick={() => handleGenerateAnimation("gif")}
                 >
                   Regenerate GIF
                 </Button>
@@ -1419,11 +1451,70 @@ function App() {
           ) : (
             <Button
               variant="contained"
-              onClick={handleGenerateGif}
+              onClick={() => handleGenerateAnimation("gif")}
               disabled={isGeneratingGif || !message}
               sx={{ mt: 2 }}
             >
               Generate GIF
+            </Button>
+          )}
+          {isGeneratingWebP ? (
+            <>
+              <Skeleton width={608} height={128} />
+              <Box sx={{ width: "100%", mt: 2 }}>
+                <LinearProgress variant="determinate" value={gifProgress} />
+                <Typography variant="caption" sx={{ mt: 1 }}>
+                  {Math.round(gifProgress)}% - Processing frames...
+                </Typography>
+              </Box>
+            </>
+          ) : generatedWebP ? (
+            <>
+              <Image
+                src={generatedWebP}
+                alt="Generated WebP"
+                width={608}
+                height={128}
+                style={{
+                  imageRendering: "pixelated",
+                  border: "1px solid #000",
+                }}
+                unoptimized
+              />
+              <ButtonGroup sx={{ mt: 2 }}>
+                <Button
+                  startIcon={<DownloadIcon />}
+                  onClick={() => {
+                    const link = document.createElement("a");
+                    link.href = generatedWebP;
+                    link.download = "dialogue-animation.webp";
+                    link.click();
+                  }}
+                >
+                  Download WebP
+                </Button>
+                <Button
+                  startIcon={<ContentCopyIcon />}
+                  onClick={() => navigator.clipboard.writeText(generatedWebP)}
+                >
+                  Copy WebP URL
+                </Button>
+                <Button
+                  startIcon={<RefreshRounded />}
+                  onClick={() => handleGenerateAnimation("webp")}
+                >
+                  Regenerate WebP
+                </Button>
+              </ButtonGroup>
+            </>
+          ) : (
+            <Button
+              variant="contained"
+              onClick={() => handleGenerateAnimation("webp")}
+              disabled={isGeneratingWebP || !message}
+              sx={{ mt: 2 }}
+            >
+              Generate WebP
             </Button>
           )}
         </Box>
@@ -1460,161 +1551,249 @@ function App() {
       <AppContainer>
         <Box
           sx={{
+            display: "flex",
+            justifyContent: "flex-end",
             backgroundColor: "background.paper",
-            position: "sticky",
-            top: 0,
-            width: "100%",
-            margin: 0,
-            padding: theme.spacing(0, 0, 2, 0),
-            zIndex: 1,
+            padding: theme.spacing(1),
           }}
         >
-          {/* Preview Container at the top */}
-          <PreviewContainer>
-            <Tabs
-              value={previewTab}
-              onChange={(e, newValue) => setPreviewTab(newValue)}
-              centered
-              sx={{ mb: 0 }}
-            >
-              <Tab label="Image Editor" />
-              <Tab label="GIF Generator (beta)" />
-            </Tabs>
+          <IconButton onClick={handleTogglePreview}>
+            {isPreviewVisible ? <VisibilityOffIcon /> : <VisibilityIcon />}
+          </IconButton>
+        </Box>
 
-            {/* Image Preview Tab */}
-            {previewTab === 0 && (
-              <Box>
-                {imageData ? (
-                  <img
-                    src={imageData}
-                    alt="Rendered output"
-                    width={608}
-                    height={128}
-                    style={{
-                      imageRendering: "pixelated",
-                      border: "1px solid #000",
-                    }}
-                  />
-                ) : (
-                  <Skeleton width={608} height={128} />
-                )}
-                <Box
-                  sx={{
-                    mt: 2,
-                    position: "sticky",
-                    bottom: 0,
-                    backgroundColor: "background.paper",
-                    py: 1,
-                  }}
-                >
-                  <ButtonGroup>
-                    <Button
-                      startIcon={<ContentCopyIcon />}
-                      onClick={handleCopyImage}
-                      disabled={!imageData}
-                    >
-                      Copy Image
-                    </Button>
-                    <Button
-                      startIcon={<DownloadIcon />}
-                      onClick={handleDownload}
-                      disabled={!imageData}
-                    >
-                      Download Image
-                    </Button>
-                  </ButtonGroup>
-                </Box>
-              </Box>
-            )}
-
-            {/* GIF Preview Tab */}
-            {previewTab === 1 && (
-              <Box
-                sx={{
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
+        {isPreviewVisible && (
+          <Box
+            sx={{
+              backgroundColor: "background.paper",
+              position: "sticky",
+              top: 0,
+              width: "100%",
+              margin: 0,
+              padding: theme.spacing(0, 0, 2, 0),
+              zIndex: 1,
+            }}
+          >
+            <PreviewContainer>
+              <Tabs
+                value={previewTab}
+                onChange={(e, newValue) => setPreviewTab(newValue)}
+                centered
+                sx={{ mb: 0 }}
               >
-                {isGeneratingGif ? (
-                  <>
-                    <Skeleton variant="rectangular" width={608} height={128} />
-                    <Box sx={{ width: "100%", mt: 2 }}>
-                      <LinearProgress
-                        variant="determinate"
-                        value={gifProgress}
-                      />
-                      <Typography variant="caption" sx={{ mt: 1 }}>
-                        {Math.round(gifProgress)}% - Processing frames...
-                      </Typography>
-                    </Box>
-                  </>
-                ) : generatedGif ? (
-                  <>
-                    <Image
-                      src={generatedGif}
-                      alt="Generated GIF"
+                <Tab label="Image Editor" />
+                <Tab label="GIF Generator (beta)" />
+              </Tabs>
+
+              {/* Image Preview Tab */}
+              {previewTab === 0 && (
+                <Box>
+                  {imageData ? (
+                    <img
+                      src={imageData}
+                      alt="Rendered output"
                       width={608}
                       height={128}
                       style={{
                         imageRendering: "pixelated",
                         border: "1px solid #000",
                       }}
-                      unoptimized
                     />
-                    <Box
-                      sx={{
-                        mt: 2,
-                        position: "sticky",
-                        bottom: 0,
-                        backgroundColor: "background.paper",
-                        py: 1,
-                      }}
-                    >
-                      <ButtonGroup>
-                        <Button
-                          startIcon={<DownloadIcon />}
-                          onClick={() => {
-                            const link = document.createElement("a");
-                            link.href = generatedGif;
-                            link.download = "dialogue-animation.gif";
-                            link.click();
-                          }}
-                        >
-                          Download GIF
-                        </Button>
-                        <Button
-                          startIcon={<ContentCopyIcon />}
-                          onClick={() =>
-                            navigator.clipboard.writeText(generatedGif)
-                          }
-                        >
-                          Copy GIF URL
-                        </Button>
-                        <Button
-                          startIcon={<RefreshRounded />} // Add a refresh icon
-                          onClick={handleGenerateGif}
-                        >
-                          Regenerate GIF
-                        </Button>
-                      </ButtonGroup>
-                    </Box>
-                  </>
-                ) : (
-                  <Button
-                    variant="contained"
-                    onClick={handleGenerateGif}
-                    disabled={isGeneratingGif || !message}
-                    sx={{ mt: 2 }}
+                  ) : (
+                    <Skeleton width={608} height={128} />
+                  )}
+                  <Box
+                    sx={{
+                      mt: 2,
+                      position: "sticky",
+                      bottom: 0,
+                      backgroundColor: "background.paper",
+                      py: 1,
+                    }}
                   >
-                    Generate GIF
-                  </Button>
-                )}
-              </Box>
-            )}
-          </PreviewContainer>
-        </Box>
+                    <ButtonGroup>
+                      <Button
+                        startIcon={<ContentCopyIcon />}
+                        onClick={handleCopyImage}
+                        disabled={!imageData}
+                      >
+                        Copy Image
+                      </Button>
+                      <Button
+                        startIcon={<DownloadIcon />}
+                        onClick={handleDownload}
+                        disabled={!imageData}
+                      >
+                        Download Image
+                      </Button>
+                    </ButtonGroup>
+                  </Box>
+                </Box>
+              )}
+
+              {/* GIF Preview Tab */}
+              {previewTab === 1 && (
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  {isGeneratingGif ? (
+                    <>
+                      <Skeleton variant="rectangular" width={608} height={128} />
+                      <Box sx={{ width: "100%", mt: 2 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={gifProgress}
+                        />
+                        <Typography variant="caption" sx={{ mt: 1 }}>
+                          {Math.round(gifProgress)}% - Processing frames...
+                        </Typography>
+                      </Box>
+                    </>
+                  ) : generatedGif ? (
+                    <>
+                      <Image
+                        src={generatedGif}
+                        alt="Generated GIF"
+                        width={608}
+                        height={128}
+                        style={{
+                          imageRendering: "pixelated",
+                          border: "1px solid #000",
+                        }}
+                        unoptimized
+                      />
+                      <Box
+                        sx={{
+                          mt: 2,
+                          position: "sticky",
+                          bottom: 0,
+                          backgroundColor: "background.paper",
+                          py: 1,
+                        }}
+                      >
+                        <ButtonGroup>
+                          <Button
+                            startIcon={<DownloadIcon />}
+                            onClick={() => {
+                              const link = document.createElement("a");
+                              link.href = generatedGif;
+                              link.download = "dialogue-animation.gif";
+                              link.click();
+                            }}
+                          >
+                            Download GIF
+                          </Button>
+                          <Button
+                            startIcon={<ContentCopyIcon />}
+                            onClick={() =>
+                              navigator.clipboard.writeText(generatedGif)
+                            }
+                          >
+                            Copy GIF URL
+                          </Button>
+                          <Button
+                            startIcon={<RefreshRounded />} // Add a refresh icon
+                            onClick={() => handleGenerateAnimation("gif")}
+                          >
+                            Regenerate GIF
+                          </Button>
+                        </ButtonGroup>
+                      </Box>
+                    </>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      onClick={() => handleGenerateAnimation("gif")}
+                      disabled={isGeneratingGif || !message}
+                      sx={{ mt: 2 }}
+                    >
+                      Generate GIF
+                    </Button>
+                  )}
+                  {isGeneratingWebP ? (
+                    <>
+                      <Skeleton variant="rectangular" width={608} height={128} />
+                      <Box sx={{ width: "100%", mt: 2 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={gifProgress}
+                        />
+                        <Typography variant="caption" sx={{ mt: 1 }}>
+                          {Math.round(gifProgress)}% - Processing frames...
+                        </Typography>
+                      </Box>
+                    </>
+                  ) : generatedWebP ? (
+                    <>
+                      <Image
+                        src={generatedWebP}
+                        alt="Generated WebP"
+                        width={608}
+                        height={128}
+                        style={{
+                          imageRendering: "pixelated",
+                          border: "1px solid #000",
+                        }}
+                        unoptimized
+                      />
+                      <Box
+                        sx={{
+                          mt: 2,
+                          position: "sticky",
+                          bottom: 0,
+                          backgroundColor: "background.paper",
+                          py: 1,
+                        }}
+                      >
+                        <ButtonGroup>
+                          <Button
+                            startIcon={<DownloadIcon />}
+                            onClick={() => {
+                              const link = document.createElement("a");
+                              link.href = generatedWebP;
+                              link.download = "dialogue-animation.webp";
+                              link.click();
+                            }}
+                          >
+                            Download WebP
+                          </Button>
+                          <Button
+                            startIcon={<ContentCopyIcon />}
+                            onClick={() =>
+                              navigator.clipboard.writeText(generatedWebP)
+                            }
+                          >
+                            Copy WebP URL
+                          </Button>
+                          <Button
+                            startIcon={<RefreshRounded />}
+                            onClick={() => handleGenerateAnimation("webp")}
+                          >
+                            Regenerate WebP
+                          </Button>
+                        </ButtonGroup>
+                      </Box>
+                    </>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      onClick={() => handleGenerateAnimation("webp")}
+                      disabled={isGeneratingWebP || !message}
+                      sx={{ mt: 2 }}
+                    >
+                      Generate WebP
+                    </Button>
+                  )}
+                </Box>
+              )}
+            </PreviewContainer>
+          </Box>
+        )}
 
         <ContentContainer sx={contentContainerStyles}>
           <TwoColumnGrid>
