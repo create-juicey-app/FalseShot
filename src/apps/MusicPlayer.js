@@ -46,6 +46,12 @@ const tracks = [
     defaultSpeed: 100,
   },
   {
+    title: "Machine Girl - Heavenly Delight",
+    bpm: 174,
+    filename: "Heavenly_Delight.mp3",
+    defaultSpeed: 100,
+  },
+  {
     title: "FEMTANYL - P3T",
     bpm: 168,
     filename: "P3T.mp3",
