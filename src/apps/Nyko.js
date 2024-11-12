@@ -193,7 +193,7 @@ function App() {
   const [gifProgress, setGifProgress] = useState(0);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true); // Add this line
   const [isGeneratingWebP, setIsGeneratingWebP] = useState(false); // Add this line
-
+  const [GeneratedWebP, setGeneratedWebP] = useState(null);
   const renderRef = useRef(null);
   const imageCache = useRef({});
 
