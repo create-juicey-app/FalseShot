@@ -884,23 +884,16 @@ function App() {
   ]);
   const handleCopyImage = useCallback(() => {
     if (imageData) {
-      navigator.clipboard
-        .writeText(imageData)
-        .then(() => {
-          alert(
-            "Image URL copied to clipboard! You can paste it in most applications."
-          );
+      fetch(imageData)
+        .then((res) => res.blob())
+        .then(async (blob) => {
+          const item = new ClipboardItem({ [blob.type]: blob });
+          await navigator.clipboard.write([item]);
+          // Optionally, display a success message
         })
         .catch((err) => {
-          console.error("Failed to copy image URL:", err);
-          setErrorMessage(
-            "Failed to copy image URL. Please try again or use right-click to copy the image."
-          );
-          setError(true);
+          // Handle error
         });
-    } else {
-      setErrorMessage("Image not ready. Please wait for it to render.");
-      setError(true);
     }
   }, [imageData]);
 
@@ -1436,9 +1429,9 @@ function App() {
                 </Button>
                 <Button
                   startIcon={<ContentCopyIcon />}
-                  onClick={() => navigator.clipboard.writeText(generatedGif)}
+                  onClick={handleCopyGif} // Update to use the new copy function
                 >
-                  Copy GIF URL
+                  Copy GIF
                 </Button>
                 <Button
                   startIcon={<RefreshRounded />} // Add a refresh icon
@@ -1468,10 +1461,10 @@ function App() {
                 </Typography>
               </Box>
             </>
-          ) : generatedWebP ? (
+          ) : GeneratedWebP ? (
             <>
               <Image
-                src={generatedWebP}
+                src={GeneratedWebP}
                 alt="Generated WebP"
                 width={608}
                 height={128}
@@ -1486,7 +1479,7 @@ function App() {
                   startIcon={<DownloadIcon />}
                   onClick={() => {
                     const link = document.createElement("a");
-                    link.href = generatedWebP;
+                    link.href = GeneratedWebP;
                     link.download = "dialogue-animation.webp";
                     link.click();
                   }}
@@ -1495,9 +1488,9 @@ function App() {
                 </Button>
                 <Button
                   startIcon={<ContentCopyIcon />}
-                  onClick={() => navigator.clipboard.writeText(generatedWebP)}
+                  onClick={handleCopyWebP} // Update to use the new copy function
                 >
-                  Copy WebP URL
+                  Copy WebP
                 </Button>
                 <Button
                   startIcon={<RefreshRounded />}
@@ -1583,6 +1576,7 @@ function App() {
               >
                 <Tab label="Image Editor" />
                 <Tab label="GIF Generator (beta)" />
+                <Tab label="WebP Generator (beta)" /> {/* Add this line */}
               </Tabs>
 
               {/* Image Preview Tab */}
@@ -1643,7 +1637,11 @@ function App() {
                 >
                   {isGeneratingGif ? (
                     <>
-                      <Skeleton variant="rectangular" width={608} height={128} />
+                      <Skeleton
+                        variant="rectangular"
+                        width={608}
+                        height={128}
+                      />
                       <Box sx={{ width: "100%", mt: 2 }}>
                         <LinearProgress
                           variant="determinate"
@@ -1690,11 +1688,9 @@ function App() {
                           </Button>
                           <Button
                             startIcon={<ContentCopyIcon />}
-                            onClick={() =>
-                              navigator.clipboard.writeText(generatedGif)
-                            }
+                            onClick={handleCopyGif} // Update to use the new copy function
                           >
-                            Copy GIF URL
+                            Copy GIF
                           </Button>
                           <Button
                             startIcon={<RefreshRounded />} // Add a refresh icon
@@ -1717,7 +1713,11 @@ function App() {
                   )}
                   {isGeneratingWebP ? (
                     <>
-                      <Skeleton variant="rectangular" width={608} height={128} />
+                      <Skeleton
+                        variant="rectangular"
+                        width={608}
+                        height={128}
+                      />
                       <Box sx={{ width: "100%", mt: 2 }}>
                         <LinearProgress
                           variant="determinate"
@@ -1728,10 +1728,10 @@ function App() {
                         </Typography>
                       </Box>
                     </>
-                  ) : generatedWebP ? (
+                  ) : GeneratedWebP ? (
                     <>
                       <Image
-                        src={generatedWebP}
+                        src={GeneratedWebP}
                         alt="Generated WebP"
                         width={608}
                         height={128}
@@ -1755,7 +1755,7 @@ function App() {
                             startIcon={<DownloadIcon />}
                             onClick={() => {
                               const link = document.createElement("a");
-                              link.href = generatedWebP;
+                              link.href = GeneratedWebP;
                               link.download = "dialogue-animation.webp";
                               link.click();
                             }}
@@ -1764,11 +1764,9 @@ function App() {
                           </Button>
                           <Button
                             startIcon={<ContentCopyIcon />}
-                            onClick={() =>
-                              navigator.clipboard.writeText(generatedWebP)
-                            }
+                            onClick={handleCopyWebP} // Update to use the new copy function
                           >
-                            Copy WebP URL
+                            Copy WebP
                           </Button>
                           <Button
                             startIcon={<RefreshRounded />}
