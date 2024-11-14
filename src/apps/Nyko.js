@@ -114,8 +114,6 @@ const globalStyles = css`
 `;
 
 const PreviewContainer = muiStyled(Box)(({ theme }) => ({
-  position: "sticky",
-  top: 0,
   width: "100%",
   margin: 0,
   padding: theme.spacing(2),
@@ -133,7 +131,7 @@ const TwoColumnGrid = muiStyled(Box)(({ theme }) => ({
   gridTemplateColumns: "1fr",
   gap: theme.spacing(2),
   width: "100%",
-  height: "calc(100vh - 200px)", // Adjust based on your header/preview height
+  height: "calc(200vh - 200px)", // Adjust based on your header/preview height
   [theme.breakpoints.up("md")]: {
     gridTemplateColumns: "50% 50%", // Change to equal width columns
   },
@@ -1658,223 +1656,46 @@ function App() {
       p={0}
     >
       <AppContainer>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            backgroundColor: "background.paper",
-            padding: theme.spacing(1),
-          }}
-        >
-          <IconButton onClick={handleTogglePreview}>
-            {isPreviewVisible ? <VisibilityOffIcon /> : <VisibilityIcon />}
-          </IconButton>
-        </Box>
-
-        {isPreviewVisible && (
+        <ContentContainer sx={contentContainerStyles}>
           <Box
             sx={{
+              display: "flex",
+              justifyContent: "center",
               backgroundColor: "background.paper",
-              position: "relative",
-              top: 0,
-              width: "100%",
-              margin: 0,
-              padding: theme.spacing(0, 0, 2, 0),
-              zIndex: 1,
+              padding: theme.spacing(1),
             }}
           >
-            <Tabs
-              value={previewTab}
-              onChange={(e, newValue) => setPreviewTab(newValue)}
-              centered
-              sx={{ mb: 0 }}
-            >
-              <Tab label="Image Editor" />
-              <Tab label="GIF Generator (beta)" />
-              <Tab label="WebP Generator (beta)" />
-            </Tabs>
-
-            {/* Image Preview Tab */}
-            {previewTab === 0 && (
-              <Box display="flex" flexDirection="column" alignItems="center">
-                {imageData ? (
-                  <ResponsiveImage src={imageData} alt="Rendered output" />
-                ) : (
-                  <Skeleton width={608} height={128} />
-                )}
-                <Box
-                  sx={{
-                    mt: 2,
-                    display: "flex",
-                    justifyContent: "center",
-                    backgroundColor: "background.paper",
-                    py: 1,
-                  }}
-                >
-                  <ButtonGroup>
-                    <Button
-                      startIcon={<ContentCopyIcon />}
-                      onClick={handleCopyImage}
-                      disabled={!imageData}
-                    >
-                      Copy Image
-                    </Button>
-                    <Button
-                      startIcon={<DownloadIcon />}
-                      onClick={handleDownload}
-                      disabled={!imageData}
-                    >
-                      Download Image
-                    </Button>
-                  </ButtonGroup>
-                </Box>
-              </Box>
-            )}
-
-            {/* GIF Preview Tab */}
-            {previewTab === 1 && (
-              <Box
-                sx={{
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                {isGeneratingGif ? (
-                  <>
-                    <Skeleton variant="rectangular" width={608} height={128} />
-                    <Box sx={{ width: "100%", mt: 2 }}>
-                      <LinearProgress
-                        variant="determinate"
-                        value={gifProgress}
-                        sx={{ height: "16px", my: 2, mx: 2 }} // Add 'mx: 2' for horizontal margins
-                      />
-                      <Typography variant="caption" sx={{ mt: 1 }}>
-                        {Math.round(gifProgress)}% - Processing frames...
-                      </Typography>
-                    </Box>
-                  </>
-                ) : generatedGif ? (
-                  <>
-                    <ResponsiveImage src={generatedGif} alt="Generated GIF" />
-                    <Box
-                      sx={{
-                        mt: 2,
-                        display: "flex",
-                        justifyContent: "center",
-                        backgroundColor: "background.paper",
-                        py: 1,
-                      }}
-                    >
-                      <ButtonGroup>
-                        <Button
-                          startIcon={<DownloadIcon />}
-                          onClick={() => {
-                            const link = document.createElement("a");
-                            link.href = generatedGif;
-                            link.download = "dialogue-animation.gif";
-                            link.click();
-                          }}
-                        >
-                          Download GIF
-                        </Button>
-
-                        <Button
-                          startIcon={<RefreshRounded />}
-                          onClick={() => handleGenerateAnimation("gif")}
-                        >
-                          Regenerate GIF
-                        </Button>
-                      </ButtonGroup>
-                    </Box>
-                  </>
-                ) : (
-                  <Button
-                    variant="contained"
-                    onClick={() => handleGenerateAnimation("gif")}
-                    disabled={isGeneratingGif || !message}
-                    sx={{ mt: 2 }}
-                  >
-                    Generate GIF
-                  </Button>
-                )}
-              </Box>
-            )}
-
-            {/* WebP Preview Tab */}
-            {previewTab === 2 && (
-              <Box
-                sx={{
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                {isGeneratingWebP ? (
-                  <>
-                    <Skeleton variant="rectangular" width={608} height={128} />
-                    <Box sx={{ width: "100%", mt: 2 }}>
-                      <LinearProgress
-                        variant="determinate"
-                        value={gifProgress}
-                        sx={{ height: "16px", my: 2, mx: 2 }} // Add 'mx: 2' for horizontal margins
-                      />
-                      <Typography variant="caption" sx={{ mt: 1 }}>
-                        {Math.round(gifProgress)}% - Processing frames...
-                      </Typography>
-                    </Box>
-                  </>
-                ) : GeneratedWebP ? (
-                  <>
-                    <ResponsiveImage src={GeneratedWebP} alt="Generated WebP" />
-                    <Box
-                      sx={{
-                        mt: 2,
-                        display: "flex",
-                        justifyContent: "center",
-                        backgroundColor: "background.paper",
-                        py: 1,
-                      }}
-                    >
-                      <ButtonGroup>
-                        <Button
-                          startIcon={<DownloadIcon />}
-                          onClick={() => {
-                            const link = document.createElement("a");
-                            link.href = GeneratedWebP;
-                            link.download = "dialogue-animation.webp";
-                            link.click();
-                          }}
-                        >
-                          Download WebP
-                        </Button>
-                        <Button
-                          startIcon={<RefreshRounded />}
-                          onClick={() => handleGenerateAnimation("webp")}
-                        >
-                          Regenerate WebP
-                        </Button>
-                      </ButtonGroup>
-                    </Box>
-                  </>
-                ) : (
-                  <Button
-                    variant="contained"
-                    onClick={() => handleGenerateAnimation("webp")}
-                    disabled={isGeneratingWebP || !message}
-                    sx={{ mt: 2 }}
-                  >
-                    Generate WebP
-                  </Button>
-                )}
-              </Box>
-            )}
+            <IconButton onClick={handleTogglePreview}>
+              {isPreviewVisible ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            </IconButton>
           </Box>
-        )}
 
-        <ContentContainer sx={contentContainerStyles}>
+          {/* Move preview section here */}
+          {isPreviewVisible && (
+            <Box
+              sx={{
+                backgroundColor: "background.paper",
+                width: "100%",
+                margin: 0,
+                padding: theme.spacing(0, 0, 2, 0),
+                borderBottom: `1px solid ${theme.palette.divider}`,
+              }}
+            >
+              <Tabs
+                value={previewTab}
+                onChange={(e, newValue) => setPreviewTab(newValue)}
+                centered
+                scrollButtons={true}
+                sx={{ mb: 0 }}
+              >
+                <Tab label="Image Editor" />
+                <Tab label="GIF Generator (beta)" />
+                <Tab label="WebP Generator (beta)" />
+              </Tabs>
+              {renderPreview()}
+            </Box>
+          )}
+
           <TwoColumnGrid>
             <CharacterColumn>
               {characterAccordions}
