@@ -129,7 +129,9 @@
         { "name": "Goober", "file": "Goob.png" },
         { "name": "Mad", "file": "Angy.png" },
         { "name": "Confused", "file": "Confusion.png" },
-        { "name": "Death", "file": "boi.png" }
+        { "name": "Death", "file": "boi.png" },
+        { "name": "Big Cry", "file": "Supercry.webp" },
+        { "name": "Crying (silly)", "file": "crying.png" }
       ]
     },
     {
@@ -257,6 +259,44 @@
       ]
     },
     {
+      "name": "M (BunkerTiger)",
+      "folder": "bunker",
+      "expressions": [
+        { "name": "Normal", "file": "bunker.png" },
+        { "name": "Second", "file": "bunker2.png" },
+        { "name": "Third", "file": "bunker3.png" },
+        { "name": "Fourth", "file": "bunker4.png" },
+        { "name": "Fifth", "file": "bunker5.png" },
+        { "name": "Sixth", "file": "bunker6.png" },
+        { "name": "83c", "file": "bunker_83c.png" },
+        { "name": "Crying", "file": "bunker_cry.png" },
+        { "name": "Distressed", "file": "bunker_distressed.png" },
+        { "name": "Distressed 2", "file": "bunker_distressed2.png" },
+        { "name": "Distressed Talk", "file": "bunker_distressed_talk.png" },
+        { "name": "Distressed Yip", "file": "bunker_distressed_yip.png" },
+        { "name": "Eye Closed", "file": "bunker_eyeclosed.png" },
+        { "name": "Eye Closed 2", "file": "bunker_eyeclosed2.png" },
+        { "name": "Gasmask", "file": "bunker_gasmask.png" },
+        { "name": "Huh", "file": "bunker_huh.png" },
+        { "name": "Less Sad", "file": "bunker_less_sad.png" },
+        { "name": "Pancakes", "file": "bunker_pancakes.png" },
+        { "name": "Sad", "file": "bunker_sad.png" },
+        { "name": "Shock", "file": "bunker_shock.png" },
+        { "name": "Smile", "file": "bunker_smile.png" },
+        { "name": "Speak", "file": "bunker_speak.png" },
+        { "name": "Surprised", "file": "bunker_surprised.png" },
+        { "name": "Upset", "file": "bunker_upset.png" },
+        { "name": "Upset 2", "file": "bunker_upset2.png" },
+        { "name": "Upset Meow", "file": "bunker_upset_meow.png" },
+        { "name": "What", "file": "bunker_what.png" },
+        { "name": "What 2", "file": "bunker_what2.png" },
+        { "name": "Wtf", "file": "bunker_wtf.png" },
+        { "name": "Wtf 2", "file": "bunker_wtf2.png" },
+        { "name": "Yawn", "file": "bunker_yawn.png" },
+        { "name": "Lick", "file": "MLick.png" }
+      ]
+    },
+    {
       "name": "Siffrin",
       "folder": "siffrin",
       "expressions": [
@@ -290,6 +330,31 @@
       "name": "Courier New",
       "file": null,
       "charLimit": 25
+    },
+    {
+      "name": "Comic Sans MS",
+      "file": "ComicSansMS.ttf",
+      "charLimit": 28
+    },
+    {
+      "name": "Verdana",
+      "file": "Verdana.ttf",
+      "charLimit": 26
+    },
+    {
+      "name": "Times New Roman",
+      "file": "TimesNewRoman.ttf",
+      "charLimit": 24
+    },
+    {
+      "name": "Georgia",
+      "file": "Georgia.ttf",
+      "charLimit": 29
+    },
+    {
+      "name": "Impact",
+      "file": "Impact.ttf",
+      "charLimit": 22
     }
   ]
 }
