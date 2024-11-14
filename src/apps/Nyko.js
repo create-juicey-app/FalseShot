@@ -48,6 +48,8 @@ import SearchIcon from "@mui/icons-material/Search"; // Add this import
 import VisibilityIcon from "@mui/icons-material/Visibility"; // Add this import
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"; // Add this import
 import { FixedSizeGrid } from "react-window"; // Import FixedSizeGrid from 'react-window' at the top
+import { Neko, NekoSizeVariations } from "neko-ts"; // Add this import
+import PetsIcon from "@mui/icons-material/Pets"; // Add this import
 // Styled Components
 // Update AppContainer to handle full width without margins
 const AppContainer = muiStyled(Box)(({ theme }) => ({
@@ -223,6 +225,9 @@ function App() {
     columnWidth: 110,
   });
   const gridContainerRef = useRef(null);
+
+  const neko = useRef(null); // Add this line
+  const [isNekoVisible, setIsNekoVisible] = useState(true); // Add this line
 
   // 1. Move loadImage definition to top
   const loadImage = useCallback((src) => {
@@ -1629,6 +1634,26 @@ function App() {
     </PreviewContainer>
   );
 
+  useEffect(() => {
+    if (!neko.current && isNekoVisible) {
+      neko.current = new Neko({
+        nekoSize: NekoSizeVariations.SMALL,
+        speed: 10,
+        origin: {
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+        },
+      });
+    }
+
+    return () => {
+      if (neko.current) {
+        neko.current.destroy();
+        neko.current = null;
+      }
+    };
+  }, [isNekoVisible]);
+
   if (isLoading) {
     return (
       <Box
@@ -1663,10 +1688,17 @@ function App() {
               justifyContent: "center",
               backgroundColor: "background.paper",
               padding: theme.spacing(1),
+              gap: 1,
             }}
           >
             <IconButton onClick={handleTogglePreview}>
               {isPreviewVisible ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            </IconButton>
+            <IconButton
+              onClick={() => setIsNekoVisible((prev) => !prev)}
+              color={isNekoVisible ? "primary" : "default"}
+            >
+              <PetsIcon />
             </IconButton>
           </Box>
 

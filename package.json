@@ -25,6 +25,7 @@
     "gifshot": "^0.4.5",
     "mime-types": "^2.1.35",
     "mongodb": "^6.10.0",
+    "neko-ts": "^0.0.6",
     "next": "^14.2.15",
     "re-resizable": "^6.10.0",
     "react": "^18",
