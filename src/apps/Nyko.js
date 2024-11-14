@@ -1675,7 +1675,7 @@ function App() {
           <Box
             sx={{
               backgroundColor: "background.paper",
-              position: "sticky",
+              position: "relative",
               top: 0,
               width: "100%",
               margin: 0,
