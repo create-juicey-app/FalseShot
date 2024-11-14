@@ -33,23 +33,24 @@ import {
   LinearProgress,
   Skeleton, // Add this import
   IconButton, // Add this import
+  styled, // Ensure 'styled' is imported
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import UploadIcon from "@mui/icons-material/Upload";
-import { styled, keyframes, css } from "@mui/system"; // Add css import
+import { styled as muiStyled, keyframes, css } from "@mui/system"; // Add css import
 import Modal from "../components/Modal";
-import Image from "next/image"; // Change the import line
 import gifshot from "gifshot"; // Add gifshot import at the top
 import { RefreshRounded } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search"; // Add this import
 import VisibilityIcon from "@mui/icons-material/Visibility"; // Add this import
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"; // Add this import
+import { FixedSizeGrid } from "react-window"; // Import FixedSizeGrid from 'react-window' at the top
 // Styled Components
 // Update AppContainer to handle full width without margins
-const AppContainer = styled(Box)(({ theme }) => ({
+const AppContainer = muiStyled(Box)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   minHeight: "100vh",
@@ -61,20 +62,16 @@ const AppContainer = styled(Box)(({ theme }) => ({
 }));
 
 // Update ContentContainer to use full width
-const ContentContainer = styled(Box)(({ theme }) => ({
+const ContentContainer = muiStyled(Box)(({ theme }) => ({
   flex: 1,
   width: "100%",
   overflowY: "auto",
   paddingTop: theme.spacing(2),
   margin: 0,
-  "& > *": {
-    maxWidth: "100vw",
-    boxSizing: "border-box",
-  },
 }));
 
 // Update InterfaceBox to use full width
-const InterfaceBox = styled(Box)(({ theme }) => ({
+const InterfaceBox = muiStyled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   width: "100%",
   maxWidth: "100%",
@@ -83,7 +80,7 @@ const InterfaceBox = styled(Box)(({ theme }) => ({
 }));
 
 // Add SearchBox component
-const SearchBox = styled(Box)(({ theme }) => ({
+const SearchBox = muiStyled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   padding: theme.spacing(1),
@@ -91,13 +88,13 @@ const SearchBox = styled(Box)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
-const OutputBox = styled(Box)(({ theme }) => ({
+const OutputBox = muiStyled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   textAlign: "center",
   overflowY: "auto", // Add this line to enable scrolling
 }));
 
-const CustomExpressionImage = styled("img")(({ theme }) => ({
+const CustomExpressionImage = muiStyled("img")(({ theme }) => ({
   width: "96px",
   height: "96px",
   "&:hover": {
@@ -116,7 +113,7 @@ const globalStyles = css`
   }
 `;
 
-const PreviewContainer = styled(Box)(({ theme }) => ({
+const PreviewContainer = muiStyled(Box)(({ theme }) => ({
   position: "sticky",
   top: 0,
   width: "100%",
@@ -131,32 +128,58 @@ const PreviewContainer = styled(Box)(({ theme }) => ({
 }));
 
 // Add new styled component for the grid layout
-const TwoColumnGrid = styled(Box)(({ theme }) => ({
+const TwoColumnGrid = muiStyled(Box)(({ theme }) => ({
   display: "grid",
   gridTemplateColumns: "1fr",
   gap: theme.spacing(2),
   width: "100%",
+  height: "calc(100vh - 200px)", // Adjust based on your header/preview height
   [theme.breakpoints.up("md")]: {
     gridTemplateColumns: "50% 50%", // Change to equal width columns
   },
 }));
 
 // Add styled components for the columns
-const CharacterColumn = styled(Box)(({ theme }) => ({
+const CharacterColumn = muiStyled(Box)(({ theme }) => ({
   height: "100%",
   width: "100%",
   overflowY: "auto",
   padding: theme.spacing(2),
   borderRight: `1px solid ${theme.palette.divider}`,
   boxSizing: "border-box", // Ensure padding is included in width calculation
+  display: "flex",
+  flexDirection: "column",
+  "& .MuiAccordion-root": {
+    flexShrink: 0, // Prevent accordion from shrinking
+  },
+  "& .fixed-size-grid-container": {
+    // Add this class to your FixedSizeGrid wrapper
+    flex: 1, // Take remaining space
+    height: "auto !important", // Override fixed height
+  },
 }));
 
-const ControlsColumn = styled(Box)(({ theme }) => ({
+const ControlsColumn = muiStyled(Box)(({ theme }) => ({
   height: "100%",
   width: "100%",
   overflowY: "auto",
   padding: theme.spacing(2),
   boxSizing: "border-box", // Ensure padding is included in width calculation
+  display: "flex",
+  flexDirection: "column",
+  gap: theme.spacing(2),
+}));
+
+// Add a styled component for responsive images
+const ResponsiveImage = styled("img")(({ theme }) => ({
+  maxWidth: "90%",
+  width: "100%",
+  height: "auto",
+  imageRendering: "pixelated",
+  border: "1px solid #000",
+  [theme.breakpoints.down("sm")]: {
+    maxWidth: "90%",
+  },
 }));
 
 function App() {
@@ -197,14 +220,108 @@ function App() {
   const renderRef = useRef(null);
   const imageCache = useRef({});
 
-  const ResponsiveGrid = styled(Box)(({ theme }) => ({
+  const [gridDimensions, setGridDimensions] = useState({
+    columnCount: 3,
+    columnWidth: 110,
+  });
+  const gridContainerRef = useRef(null);
+
+  // 1. Move loadImage definition to top
+  const loadImage = useCallback((src) => {
+    if (imageCache.current[src]) {
+      return Promise.resolve(imageCache.current[src]);
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const img = new window.Image(); // Use window.Image constructor
+        img.crossOrigin = "anonymous"; // Add this if loading from different domains
+
+        img.onload = () => {
+          imageCache.current[src] = img;
+          resolve(img);
+        };
+
+        img.onerror = (error) => {
+          console.error(`Failed to load image: ${src}`, error);
+          reject(new Error(`Failed to load image: ${src}`));
+        };
+
+        img.src = src;
+      } catch (error) {
+        console.error("Image creation failed:", error);
+        reject(error);
+      }
+    });
+  }, []);
+  // 2. Define preloadImages with loadImage dependency
+  const preloadImages = useCallback(async () => {
+    if (!config) return;
+
+    const imagesToPreload = [
+      "/cmask.png",
+      "/arrow.png",
+      ...config.backgrounds.map((bg) => `/backgrounds/${bg.file}`),
+      ...config.characters.flatMap((char) =>
+        char.expressions.map((expr) => `/faces/${char.folder}/${expr.file}`)
+      ),
+    ];
+
+    try {
+      await Promise.all(imagesToPreload.map((src) => loadImage(src)));
+    } catch (error) {
+      console.warn("Some images failed to preload:", error);
+    }
+  }, [config, loadImage]);
+  useEffect(() => {
+    let mounted = true;
+
+    const updateGridDimensions = () => {
+      if (!mounted || !gridContainerRef.current) return;
+
+      const containerWidth = gridContainerRef.current.offsetWidth;
+      const itemWidth = 110; // Base item width (96px + some padding)
+      const columns = Math.max(1, Math.floor(containerWidth / itemWidth));
+      const adjustedColumnWidth = Math.max(110, containerWidth / columns);
+
+      setGridDimensions({
+        columnCount: columns,
+        columnWidth: adjustedColumnWidth,
+      });
+    };
+
+    // Initial update with a small delay to ensure proper mounting
+    const timer = setTimeout(() => {
+      updateGridDimensions();
+    }, 100);
+
+    // Add resize observer
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(updateGridDimensions);
+    });
+
+    if (gridContainerRef.current) {
+      resizeObserver.observe(gridContainerRef.current);
+    }
+
+    window.addEventListener("resize", updateGridDimensions);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateGridDimensions);
+    };
+  }, []);
+
+  const ResponsiveGrid = muiStyled(Box)(({ theme }) => ({
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))",
     gap: theme.spacing(1),
     justifyContent: "center",
   }));
 
-  const CharacterImage = styled("img")(({ theme }) => ({
+  const CharacterImage = muiStyled("img")(({ theme }) => ({
     width: "96px",
     height: "96px",
     borderRadius: "5px",
@@ -214,7 +331,7 @@ function App() {
     },
     imageRendering: "pixelated",
   }));
-  const BackgroundThumbnail = styled("div")(({ theme }) => ({
+  const BackgroundThumbnail = muiStyled("div")(({ theme }) => ({
     width: "200px",
     height: "42px",
     borderRadius: "5px",
@@ -226,7 +343,7 @@ function App() {
       boxShadow: theme.shadows[3],
     },
   }));
-  const AccordionHeader = styled(AccordionSummary)(({ theme }) => ({
+  const AccordionHeader = muiStyled(AccordionSummary)(({ theme }) => ({
     backgroundColor: theme.palette.grey[900],
     color: theme.palette.common.white,
     "& .MuiAccordionSummary-content": {
@@ -243,7 +360,7 @@ function App() {
   }
 `;
 
-  const BackgroundItem = styled(Box)(({ theme }) => ({
+  const BackgroundItem = muiStyled(Box)(({ theme }) => ({
     width: "100%",
     height: "60px",
     position: "relative",
@@ -272,7 +389,7 @@ function App() {
     },
   }));
 
-  const BackgroundName = styled(Typography)(({ theme }) => ({
+  const BackgroundName = muiStyled(Typography)(({ theme }) => ({
     position: "absolute",
     right: theme.spacing(2),
     top: "50%",
@@ -284,7 +401,7 @@ function App() {
     transition: "color 0.3s ease",
   }));
 
-  const PreviewContainer = styled(Box)(({ theme }) => ({
+  const PreviewContainer = muiStyled(Box)(({ theme }) => ({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -299,33 +416,26 @@ function App() {
     return () => setIsMounted(false);
   }, []);
 
-  // Load configuration
+  // 3. Update config loading effect
   useEffect(() => {
-    const loadConfig = async () => {
+    const fetchConfig = async () => {
       try {
         const response = await fetch("/nyko.json");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const configData = await response.json();
-        setConfig(configData);
-        setSelectedCharacter(configData.characters[0].name);
-        setSelectedBackground(configData.backgrounds[0].name);
-        setExpression(configData.characters[0].expressions[0].name);
-        setUseMask(configData.backgrounds[0].useMask);
+        const data = await response.json();
+        setConfig(data);
         setIsLoading(false);
-        setIsDirty(true);
+        // Set default selected background and character
+        setSelectedBackground(data.backgrounds[0].name);
+        setSelectedCharacter(data.characters[0].name);
+        setExpression(data.characters[0].expressions[0].name);
       } catch (error) {
-        console.error("Failed to load configuration:", error);
-        setErrorMessage(
-          "Failed to load configuration. Please check if config.json exists and is valid."
-        );
         setError(true);
-        setIsLoading(false);
+        setErrorMessage("Failed to load configuration.");
+        setIsErrorModalOpen(true);
       }
     };
-    loadConfig();
-  }, []);
+    fetchConfig();
+  }, []); // Empty dependency array ensures this effect runs only once
 
   // Load custom font
   useEffect(() => {
@@ -598,21 +708,6 @@ function App() {
   }, []);
 
   // Load and cache image
-  const loadImage = useCallback((src) => {
-    return new Promise((resolve, reject) => {
-      if (imageCache.current[src]) {
-        resolve(imageCache.current[src]);
-      } else {
-        const img = document.createElement("img");
-        img.onload = () => {
-          imageCache.current[src] = img;
-          resolve(img);
-        };
-        img.onerror = reject;
-        img.src = src;
-      }
-    });
-  }, []);
 
   const handleCharacterAccordionChange = useCallback(
     (characterName) => (event, isExpanded) => {
@@ -670,41 +765,62 @@ function App() {
                 }
               />
             </SearchBox>
-            <ResponsiveGrid>
-              {filteredExpressions.map((expr) => (
-                <Tooltip key={expr.name} title={expr.name}>
-                  <Box
-                    component="img"
-                    src={`/faces/${character.folder}/${expr.file}`}
-                    alt={expr.name}
-                    onClick={() => {
-                      handleCharacterChange(character.name);
-                      handleExpressionChange(expr.name);
-                    }}
-                    sx={{
-                      width: "96px",
-                      height: "96px",
-                      border:
-                        selectedCharacter === character.name &&
-                        expression === expr.name
-                          ? "2px solid"
-                          : "2px solid transparent",
-                      borderColor:
-                        selectedCharacter === character.name &&
-                        expression === expr.name
-                          ? "primary.main"
-                          : "transparent",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                      "&:hover": {
-                        borderColor: "primary.light",
-                      },
-                      imageRendering: "pixelated",
-                    }}
-                  />
-                </Tooltip>
-              ))}
-            </ResponsiveGrid>
+            <div className="fixed-size-grid-container" ref={gridContainerRef}>
+              <FixedSizeGrid
+                columnCount={gridDimensions.columnCount}
+                columnWidth={gridDimensions.columnWidth}
+                height={400}
+                rowCount={Math.ceil(
+                  filteredExpressions.length / gridDimensions.columnCount
+                )}
+                rowHeight={110}
+                width={gridContainerRef.current?.offsetWidth || 330}
+                overscanRowCount={5}
+                style={{ overflowY: "auto" }}
+              >
+                {({ columnIndex, rowIndex, style }) => {
+                  const index =
+                    rowIndex * gridDimensions.columnCount + columnIndex;
+                  if (index >= filteredExpressions.length) return null;
+                  const expr = filteredExpressions[index];
+                  return (
+                    <div style={style}>
+                      <Tooltip title={expr.name}>
+                        <Box
+                          component="img"
+                          src={`/faces/${character.folder}/${expr.file}`}
+                          alt={expr.name}
+                          onClick={() => {
+                            handleCharacterChange(character.name);
+                            handleExpressionChange(expr.name);
+                          }}
+                          sx={{
+                            width: "96px",
+                            height: "96px",
+                            border:
+                              selectedCharacter === character.name &&
+                              expression === expr.name
+                                ? "2px solid"
+                                : "2px solid transparent",
+                            borderColor:
+                              selectedCharacter === character.name &&
+                              expression === expr.name
+                                ? "primary.main"
+                                : "transparent",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            "&:hover": {
+                              borderColor: "primary.light",
+                            },
+                            imageRendering: "pixelated",
+                          }}
+                        />
+                      </Tooltip>
+                    </div>
+                  );
+                }}
+              </FixedSizeGrid>
+            </div>
           </AccordionDetails>
         </Accordion>
       );
@@ -718,6 +834,7 @@ function App() {
     handleCharacterAccordionChange,
     handleCharacterChange,
     handleExpressionChange,
+    gridDimensions,
   ]);
 
   // Render the output image
@@ -1005,27 +1122,48 @@ function App() {
               </Button>
             </label>
           </Box>
-          <ResponsiveGrid>
-            {customExpressions.map((customExpr) => (
-              <Tooltip key={customExpr.id} title={customExpr.name}>
-                <CustomExpressionImage
-                  src={customExpr.data}
-                  alt={customExpr.name}
-                  onClick={() => handleCustomExpressionSelect(customExpr)}
-                  sx={{
-                    border:
-                      selectedCustomExpression === customExpr
-                        ? "2px solid"
-                        : "2px solid transparent",
-                    borderColor:
-                      selectedCustomExpression === customExpr
-                        ? "primary.main"
-                        : "transparent",
-                  }}
-                />
-              </Tooltip>
-            ))}
-          </ResponsiveGrid>
+          <div className="fixed-size-grid-container" ref={gridContainerRef}>
+            <FixedSizeGrid
+              columnCount={gridDimensions.columnCount}
+              columnWidth={gridDimensions.columnWidth}
+              height={400}
+              rowCount={Math.ceil(
+                customExpressions.length / gridDimensions.columnCount
+              )}
+              rowHeight={110}
+              width={gridContainerRef.current?.offsetWidth || 330}
+              overscanRowCount={5}
+              style={{ overflowY: "auto" }}
+            >
+              {({ columnIndex, rowIndex, style }) => {
+                const index =
+                  rowIndex * gridDimensions.columnCount + columnIndex;
+                if (index >= customExpressions.length) return null;
+                const customExpr = customExpressions[index];
+                return (
+                  <div style={style}>
+                    <Tooltip title={customExpr.name}>
+                      <CustomExpressionImage
+                        src={customExpr.data}
+                        alt={customExpr.name}
+                        onClick={() => handleCustomExpressionSelect(customExpr)}
+                        sx={{
+                          border:
+                            selectedCustomExpression === customExpr
+                              ? "2px solid"
+                              : "2px solid transparent",
+                          borderColor:
+                            selectedCustomExpression === customExpr
+                              ? "primary.main"
+                              : "transparent",
+                        }}
+                      />
+                    </Tooltip>
+                  </div>
+                );
+              }}
+            </FixedSizeGrid>
+          </div>
         </AccordionDetails>
       </Accordion>
     ),
@@ -1034,6 +1172,7 @@ function App() {
       selectedCustomExpression,
       handleCustomExpressionUpload,
       handleCustomExpressionSelect,
+      gridDimensions,
     ]
   );
 
@@ -1279,16 +1418,20 @@ function App() {
           frames.push(...arrowAnimationFrames);
         }
 
-        setGifProgress(90);
+        // Start GIF generation progress from 10%
+        setGifProgress(10);
 
         // Create GIF with optimized settings
-        const blob = await createAnimationBlob(frames, format); // Modify this line
+        const blob = await createAnimationBlob(frames, format, (progress) => {
+          // Update progress from 10% to 100%
+          setGifProgress(10 + progress * 90);
+        });
         const animationUrl = URL.createObjectURL(blob);
 
         if (format === "gif") {
           setGeneratedGif(animationUrl);
         } else if (format === "webp") {
-          setGeneratedWebP(animationUrl); // Add this line
+          setGeneratedWebP(animationUrl);
         }
         setGifProgress(100);
         setIsGeneratingGif(false);
@@ -1302,11 +1445,10 @@ function App() {
         setGifProgress(0);
       }
     },
-    [message, generateFrame]
+    [message, generateFrame, setError, setErrorMessage]
   );
 
-  // Add a function to create animation blob in the desired format
-  const createAnimationBlob = async (frames, format) => {
+  const createAnimationBlob = async (frames, format, progressCallback) => {
     return new Promise((resolve, reject) => {
       gifshot.createGIF(
         {
@@ -1317,8 +1459,12 @@ function App() {
           frameDuration: 1,
           sampleInterval: 10,
           numWorkers: 2,
-          // Add 'format' option
           format: format === "webp" ? "image/webp" : "image/gif",
+          progressCallback: (captureProgress) => {
+            if (progressCallback) {
+              progressCallback(captureProgress);
+            }
+          },
         },
         (obj) => {
           if (!obj.error) {
@@ -1350,19 +1496,9 @@ function App() {
       {previewTab === 0 && (
         <Box>
           {imageData ? (
-            <Image
-              src={imageData}
-              alt="Rendered output"
-              width={608}
-              height={128}
-              style={{
-                imageRendering: "pixelated",
-                border: "1px solid #000",
-              }}
-              unoptimized
-            />
+            <ResponsiveImage src={imageData} alt="Rendered output" />
           ) : (
-            <Skeleton variant="rectangular" width={608} height={128} />
+            <Skeleton variant="rectangular" width="90%" height={128} />
           )}
           <ButtonGroup sx={{ mt: 2 }}>
             <Button
@@ -1382,7 +1518,6 @@ function App() {
           </ButtonGroup>
         </Box>
       )}
-
       {previewTab === 1 && (
         <Box
           sx={{
@@ -1396,7 +1531,11 @@ function App() {
             <>
               <Skeleton width={608} height={128} />
               <Box sx={{ width: "100%", mt: 2 }}>
-                <LinearProgress variant="determinate" value={gifProgress} />
+                <LinearProgress
+                  variant="determinate"
+                  value={gifProgress}
+                  sx={{ height: "16px", my: 2, mx: 2 }} // Add 'mx: 2' for horizontal margins
+                />
                 <Typography variant="caption" sx={{ mt: 1 }}>
                   {Math.round(gifProgress)}% - Processing frames...
                 </Typography>
@@ -1404,17 +1543,7 @@ function App() {
             </>
           ) : generatedGif ? (
             <>
-              <Image
-                src={generatedGif}
-                alt="Generated GIF"
-                width={608}
-                height={128}
-                style={{
-                  imageRendering: "pixelated",
-                  border: "1px solid #000",
-                }}
-                unoptimized
-              />
+              <ResponsiveImage src={generatedGif} alt="Generated GIF" />
               <ButtonGroup sx={{ mt: 2 }}>
                 <Button
                   startIcon={<DownloadIcon />}
@@ -1426,12 +1555,6 @@ function App() {
                   }}
                 >
                   Download GIF
-                </Button>
-                <Button
-                  startIcon={<ContentCopyIcon />}
-                  onClick={handleCopyGif} // Update to use the new copy function
-                >
-                  Copy GIF
                 </Button>
                 <Button
                   startIcon={<RefreshRounded />} // Add a refresh icon
@@ -1451,11 +1574,19 @@ function App() {
               Generate GIF
             </Button>
           )}
+        </Box>
+      )}
+      {previewTab === 2 && (
+        <Box>
           {isGeneratingWebP ? (
             <>
               <Skeleton width={608} height={128} />
               <Box sx={{ width: "100%", mt: 2 }}>
-                <LinearProgress variant="determinate" value={gifProgress} />
+                <LinearProgress
+                  variant="determinate"
+                  value={gifProgress}
+                  sx={{ height: "16px", my: 2, mx: 2 }} // Add 'mx: 2' for horizontal margins
+                />
                 <Typography variant="caption" sx={{ mt: 1 }}>
                   {Math.round(gifProgress)}% - Processing frames...
                 </Typography>
@@ -1463,17 +1594,7 @@ function App() {
             </>
           ) : GeneratedWebP ? (
             <>
-              <Image
-                src={GeneratedWebP}
-                alt="Generated WebP"
-                width={608}
-                height={128}
-                style={{
-                  imageRendering: "pixelated",
-                  border: "1px solid #000",
-                }}
-                unoptimized
-              />
+              <ResponsiveImage src={GeneratedWebP} alt="Generated WebP" />
               <ButtonGroup sx={{ mt: 2 }}>
                 <Button
                   startIcon={<DownloadIcon />}
@@ -1486,12 +1607,7 @@ function App() {
                 >
                   Download WebP
                 </Button>
-                <Button
-                  startIcon={<ContentCopyIcon />}
-                  onClick={handleCopyWebP} // Update to use the new copy function
-                >
-                  Copy WebP
-                </Button>
+
                 <Button
                   startIcon={<RefreshRounded />}
                   onClick={() => handleGenerateAnimation("webp")}
@@ -1545,7 +1661,7 @@ function App() {
         <Box
           sx={{
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "center",
             backgroundColor: "background.paper",
             padding: theme.spacing(1),
           }}
@@ -1580,26 +1696,17 @@ function App() {
 
             {/* Image Preview Tab */}
             {previewTab === 0 && (
-              <Box>
+              <Box display="flex" flexDirection="column" alignItems="center">
                 {imageData ? (
-                  <img
-                    src={imageData}
-                    alt="Rendered output"
-                    width={608}
-                    height={128}
-                    style={{
-                      imageRendering: "pixelated",
-                      border: "1px solid #000",
-                    }}
-                  />
+                  <ResponsiveImage src={imageData} alt="Rendered output" />
                 ) : (
                   <Skeleton width={608} height={128} />
                 )}
                 <Box
                   sx={{
                     mt: 2,
-                    position: "sticky",
-                    bottom: 0,
+                    display: "flex",
+                    justifyContent: "center",
                     backgroundColor: "background.paper",
                     py: 1,
                   }}
@@ -1641,6 +1748,7 @@ function App() {
                       <LinearProgress
                         variant="determinate"
                         value={gifProgress}
+                        sx={{ height: "16px", my: 2, mx: 2 }} // Add 'mx: 2' for horizontal margins
                       />
                       <Typography variant="caption" sx={{ mt: 1 }}>
                         {Math.round(gifProgress)}% - Processing frames...
@@ -1649,22 +1757,12 @@ function App() {
                   </>
                 ) : generatedGif ? (
                   <>
-                    <Image
-                      src={generatedGif}
-                      alt="Generated GIF"
-                      width={608}
-                      height={128}
-                      style={{
-                        imageRendering: "pixelated",
-                        border: "1px solid #000",
-                      }}
-                      unoptimized
-                    />
+                    <ResponsiveImage src={generatedGif} alt="Generated GIF" />
                     <Box
                       sx={{
                         mt: 2,
-                        position: "sticky",
-                        bottom: 0,
+                        display: "flex",
+                        justifyContent: "center",
                         backgroundColor: "background.paper",
                         py: 1,
                       }}
@@ -1681,12 +1779,7 @@ function App() {
                         >
                           Download GIF
                         </Button>
-                        <Button
-                          startIcon={<ContentCopyIcon />}
-                          onClick={handleCopyGif}
-                        >
-                          Copy GIF
-                        </Button>
+
                         <Button
                           startIcon={<RefreshRounded />}
                           onClick={() => handleGenerateAnimation("gif")}
@@ -1726,6 +1819,7 @@ function App() {
                       <LinearProgress
                         variant="determinate"
                         value={gifProgress}
+                        sx={{ height: "16px", my: 2, mx: 2 }} // Add 'mx: 2' for horizontal margins
                       />
                       <Typography variant="caption" sx={{ mt: 1 }}>
                         {Math.round(gifProgress)}% - Processing frames...
@@ -1734,22 +1828,12 @@ function App() {
                   </>
                 ) : GeneratedWebP ? (
                   <>
-                    <Image
-                      src={GeneratedWebP}
-                      alt="Generated WebP"
-                      width={608}
-                      height={128}
-                      style={{
-                        imageRendering: "pixelated",
-                        border: "1px solid #000",
-                      }}
-                      unoptimized
-                    />
+                    <ResponsiveImage src={GeneratedWebP} alt="Generated WebP" />
                     <Box
                       sx={{
                         mt: 2,
-                        position: "sticky",
-                        bottom: 0,
+                        display: "flex",
+                        justifyContent: "center",
                         backgroundColor: "background.paper",
                         py: 1,
                       }}
@@ -1765,12 +1849,6 @@ function App() {
                           }}
                         >
                           Download WebP
-                        </Button>
-                        <Button
-                          startIcon={<ContentCopyIcon />}
-                          onClick={handleCopyWebP}
-                        >
-                          Copy WebP
                         </Button>
                         <Button
                           startIcon={<RefreshRounded />}
@@ -1869,3 +1947,5 @@ function App() {
     </Box>
   );
 }
+
+export default App;
