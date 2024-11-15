@@ -334,27 +334,27 @@
     {
       "name": "Comic Sans MS",
       "file": "ComicSansMS.ttf",
-      "charLimit": 28
+      "charLimit": 34
     },
     {
       "name": "Verdana",
       "file": "Verdana.ttf",
-      "charLimit": 26
+      "charLimit": 30
     },
     {
       "name": "Times New Roman",
       "file": "TimesNewRoman.ttf",
-      "charLimit": 24
+      "charLimit": 34
     },
     {
       "name": "Georgia",
       "file": "Georgia.ttf",
-      "charLimit": 29
+      "charLimit": 32
     },
     {
       "name": "Impact",
       "file": "Impact.ttf",
-      "charLimit": 22
+      "charLimit": 36
     }
   ]
 }
