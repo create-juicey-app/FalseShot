@@ -50,6 +50,8 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"; // Add this i
 import { FixedSizeGrid } from "react-window"; // Import FixedSizeGrid from 'react-window' at the top
 import { Neko, NekoSizeVariations } from "neko-ts"; // Add this import
 import PetsIcon from "@mui/icons-material/Pets"; // Add this import
+import * as PIXI from 'pixi.js'; // Ensure PixiJS is imported
+import { Assets } from '@pixi/assets'; // Import Assets module
 // Styled Components
 // Update AppContainer to handle full width without margins
 const AppContainer = muiStyled(Box)(({ theme }) => ({
@@ -207,10 +209,6 @@ function App() {
   const [selectedFont, setSelectedFont] = useState("Terminus");
   const [fontConfig, setFontConfig] = useState({});
   const [currentLinePos, setCurrentLinePos] = useState(0);
-  const canvasRef = useRef(null);
-  const ctxRef = useRef(null);
-  const offscreenCanvasRef = useRef(null);
-  const offscreenCtxRef = useRef(null);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [previewTab, setPreviewTab] = useState(0);
   const [gifProgress, setGifProgress] = useState(0);
@@ -501,52 +499,37 @@ function App() {
     loadSelectedFont();
   }, [selectedFont]);
 
-  // Initialize canvas and context
+  // Add reference to PixiJS application
+  const pixiAppRef = useRef(null);
+
   useEffect(() => {
-    if (!isMounted || !config) return;
+    if (pixiAppRef.current) return; // Prevent re-initialization
 
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      console.error("Canvas element not found");
-      setErrorMessage(
-        "Failed to initialize canvas. Please try refreshing the page."
-      );
-      setError(true);
-      return;
-    }
+    const app = new PIXI.Application({
+      width: 608,
+      height: 128,
+      backgroundAlpha: 0,
+      antialias: false,
+    });
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      console.error("Failed to get 2D context from canvas");
-      setErrorMessage(
-        "Failed to initialize canvas context. Please try a different browser."
-      );
-      setError(true);
-      return;
-    }
+    // Create the application
+    app.init().then(() => {
+      pixiAppRef.current = app;
+      const outputBox = document.getElementById('output-box');
+      if (outputBox) {
+        outputBox.appendChild(app.view);
+      }
+      setIsDirty(true);
+    });
 
-    ctx.imageSmoothingEnabled = false;
-    ctxRef.current = ctx;
-
-    const offscreenCanvas = document.createElement("canvas");
-    offscreenCanvas.width = canvas.width;
-    offscreenCanvas.height = canvas.height;
-    const offscreenCtx = offscreenCanvas.getContext("2d");
-    if (!offscreenCtx) {
-      console.error("Failed to get 2D context from offscreen canvas");
-      setErrorMessage(
-        "Failed to initialize offscreen canvas. Please try a different browser."
-      );
-      setError(true);
-      return;
-    }
-
-    offscreenCtx.imageSmoothingEnabled = false;
-    offscreenCanvasRef.current = offscreenCanvas;
-    offscreenCtxRef.current = offscreenCtx;
-
-    setIsDirty(true);
-  }, [isMounted, config]);
+    // Cleanup
+    return () => {
+      if (pixiAppRef.current) {
+        pixiAppRef.current.destroy(true);
+        pixiAppRef.current = null;
+      }
+    };
+  }, []);
 
   const handleCustomExpressionUpload = useCallback((event) => {
     const file = event.target.files[0];
@@ -842,193 +825,131 @@ function App() {
 
   // Render the output image
 
-  useEffect(() => {
-    if (
-      !isMounted ||
-      !terminusFont ||
-      !isDirty ||
-      !config ||
-      !ctxRef.current ||
-      !offscreenCtxRef.current
-    ) {
+  const renderImage = useCallback(async () => {
+    if (!isMounted || !terminusFont || !isDirty || !config || !pixiAppRef.current?.renderer) {
       return;
     }
 
-    const renderImage = async () => {
-      const ctx = ctxRef.current;
-      const offscreenCtx = offscreenCtxRef.current;
+    const app = pixiAppRef.current;
+    app.stage.removeChildren();
 
-      if (!ctx || !offscreenCtx) {
-        setErrorMessage(
-          "Something went wrong, please send console output to juicey ):"
-        );
-        setError(true);
-        return;
+    try {
+      // Load assets
+      const character = config.characters.find((c) => c.name === selectedCharacter);
+      const background = config.backgrounds.find((b) => b.name === selectedBackground);
+
+      // Prepare asset URLs
+      const backgroundURL = `/backgrounds/${background.file}`;
+      const expressionURL = selectedCustomExpression
+        ? selectedCustomExpression.data
+        : `/faces/${character.folder}/${
+            character.expressions.find((e) => e.name === expression)?.file ||
+            character.expressions[0].file
+          }`;
+      const maskURL = useMask ? '/cmask.png' : null;
+
+      // Load textures
+      const textures = await Promise.all([
+        Assets.load(backgroundURL),
+        Assets.load(expressionURL),
+        maskURL ? Assets.load(maskURL) : null
+      ]);
+
+      const [backgroundTexture, expressionTexture, maskTexture] = textures;
+
+      // Create sprites
+      const backgroundSprite = new PIXI.Sprite(backgroundTexture);
+      app.stage.addChild(backgroundSprite);
+
+      const expressionSprite = new PIXI.Sprite(expressionTexture);
+      expressionSprite.x = app.screen.width - 114;
+      expressionSprite.y = 16;
+
+      if (useMask && maskTexture) {
+        const maskSprite = new PIXI.Sprite(maskTexture);
+        maskSprite.x = expressionSprite.x;
+        maskSprite.y = expressionSprite.y;
+        expressionSprite.mask = maskSprite;
+        app.stage.addChild(maskSprite);
       }
 
-      try {
-        const character = config.characters.find(
-          (c) => c.name === selectedCharacter
-        );
-        const background = config.backgrounds.find(
-          (b) => b.name === selectedBackground
-        );
+      app.stage.addChild(expressionSprite);
 
-        const [backgroundImg, expressionImg, maskImg] = await Promise.all([
-          loadImage(`/backgrounds/${background.file}`),
-          selectedCustomExpression
-            ? loadImage(selectedCustomExpression.data)
-            : loadImage(
-                `/faces/${character.folder}/${
-                  character.expressions.find((e) => e.name === expression)
-                    ?.file || character.expressions[0].file
-                }`
-              ),
-          useMask ? loadImage("/cmask.png") : null,
-        ]);
+      // Add text
+      const messageStyle = new PIXI.TextStyle({
+        fontFamily: selectedFont,
+        fontSize: fontSize,
+        fill: 'white',
+      });
 
-        offscreenCtx.clearRect(
-          0,
-          0,
-          offscreenCanvasRef.current.width,
-          offscreenCanvasRef.current.height
-        );
-        offscreenCtx.drawImage(
-          backgroundImg,
-          0,
-          0,
-          offscreenCanvasRef.current.width,
-          offscreenCanvasRef.current.height
-        );
+      const lines = message.split('\n');
+      const lineHeight = fontSize + 4;
+      let y = fontSize - 8;
 
-        // Create a temporary canvas for the expression
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = 96;
-        tempCanvas.height = 96;
-        const tempCtx = tempCanvas.getContext("2d");
+      lines.forEach((line) => {
+        const text = new PIXI.Text(line, messageStyle);
+        text.x = 16;
+        text.y = y;
+        app.stage.addChild(text);
+        y += lineHeight;
+      });
 
-        // Draw expression on temporary canvas
-        tempCtx.drawImage(expressionImg, 0, 0, 96, 96);
+      // Extract image data
+      const imageData = app.view.toDataURL('image/png');
+      setImageData(imageData);
 
-        // Apply mask if needed
-        if (useMask && maskImg) {
-          tempCtx.globalCompositeOperation = "destination-in";
-          tempCtx.drawImage(maskImg, 0, 0, 96, 96);
-        }
-
-        // Draw the masked expression onto the main canvas
-        offscreenCtx.drawImage(
-          tempCanvas,
-          offscreenCanvasRef.current.width - 114,
-          16,
-          96,
-          96
-        );
-
-        // Text rendering with automatic line breaks
-        offscreenCtx.font = `${fontSize}px "${selectedFont}"`;
-        offscreenCtx.textBaseline = "top";
-        offscreenCtx.textAlign = "left";
-        // Add font smoothing prevention
-        offscreenCtx.imageSmoothingEnabled = false;
-        offscreenCtx.textRendering = "pixelated";
-        offscreenCtx.fillStyle = "white";
-        offscreenCtx.textAlign = "left";
-
-        const maxWidth = offscreenCanvasRef.current.width - 144; // Leave space for the expression
-        const lineHeight = fontSize + 4; // Adjust line height based on font size
-        const lines = message.split("\n");
-        let y = fontSize - 8; // Adjust starting y position based on font size
-
-        for (let i = 0; i < lines.length; i++) {
-          offscreenCtx.fillText(lines[i], 30, y);
-          y += lineHeight;
-        }
-
-        for (let i = 0; i < lines.length && i; i++) {
-          const words = lines[i].split(" ");
-          let line = "";
-
-          for (let j = 0; j < words.length; j++) {
-            const testLine = line + words[j] + " ";
-            const metrics = offscreenCtx.measureText(testLine);
-            const testWidth = metrics.width;
-
-            if (testWidth > maxWidth && j > 0) {
-              offscreenCtx.fillText(line.trim(), 30, y);
-              line = words[j] + " ";
-              y += lineHeight;
-              break;
-            } else {
-              line = testLine;
-            }
-          }
-
-          // Draw the last line of this paragraph
-          if (line) {
-            offscreenCtx.fillText(line.trim(), 30, y);
-            y += lineHeight;
-          }
-        }
-
-        // Copy from offscreen canvas to main canvas
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        ctx.drawImage(offscreenCanvasRef.current, 0, 0);
-
-        // Update imageData state with the new rendered image
-        const imageDataUrl = canvasRef.current.toDataURL();
-        setImageData(imageDataUrl);
-
-        setIsDirty(false);
-      } catch (error) {
-        console.error("Failed to render image:", error);
-        setErrorMessage(`Failed to render image: ${error.message}`);
-        setError(true);
-      }
-    };
-    requestAnimationFrame(renderImage);
-  }, [
-    isMounted,
-    message,
-    selectedCharacter,
-    selectedBackground,
-    expression,
-    terminusFont,
-    isDirty,
-    loadImage,
-    config,
-    useMask,
-    selectedCustomExpression,
-    fontSize, // Add fontSize to the dependency array
-    selectedFont,
-  ]);
-  const handleCopyImage = useCallback(() => {
-    if (imageData) {
-      fetch(imageData)
-        .then((res) => res.blob())
-        .then(async (blob) => {
-          const item = new ClipboardItem({ [blob.type]: blob });
-          await navigator.clipboard.write([item]);
-          // Optionally, display a success message
-        })
-        .catch((err) => {
-          // Handle error
-        });
-    }
-  }, [imageData]);
-
-  const handleDownload = useCallback(() => {
-    if (imageData) {
-      const link = document.createElement("a");
-      link.href = imageData;
-      link.download = "character-dialogue.png";
-      link.click();
-    } else {
-      console.error("Image data is not available");
-      setErrorMessage("Failed to download image. Please try again.");
+      setIsDirty(false);
+    } catch (error) {
+      console.error('Error rendering image:', error);
+      setErrorMessage('Failed to render image');
       setError(true);
     }
-  }, [imageData]);
+  }, [
+    isMounted,
+    terminusFont,
+    isDirty,
+    config,
+    selectedCharacter,
+    selectedBackground,
+    selectedCustomExpression,
+    expression,
+    useMask,
+    fontSize,
+    selectedFont,
+    message,
+    setError,
+    setErrorMessage,
+  ]);
+
+  useEffect(() => {
+    if (isDirty) {
+      renderImage();
+    }
+  }, [isDirty, renderImage]);
+
+  const handleCopyImage = useCallback(() => {
+    if (pixiAppRef.current) {
+      pixiAppRef.current.view.toBlob((blob) => {
+        if (blob) {
+          const item = new ClipboardItem({ 'image/png': blob });
+          navigator.clipboard.write([item]).catch((error) => {
+            console.error('Failed to copy image:', error);
+          });
+        }
+      });
+    }
+  }, []);
+
+  const handleDownload = useCallback(() => {
+    if (pixiAppRef.current) {
+      const dataURL = pixiAppRef.current.view.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = 'rendered-image.png';
+      link.click();
+    }
+  }, []);
+
   // Memoize the expression buttons to prevent unnecessary re-renders
   const expressionButtons = useMemo(() => {
     if (!config) return null;
@@ -1773,13 +1694,8 @@ function App() {
               {backgroundSelection}
             </ControlsColumn>
           </TwoColumnGrid>
-          <OutputBox>
-            <canvas
-              ref={canvasRef}
-              width={608}
-              height={128}
-              style={{ display: "none" }}
-            />
+          <OutputBox id="output-box">
+            {/* The PixiJS canvas will be appended here */}
           </OutputBox>
         </ContentContainer>
 
